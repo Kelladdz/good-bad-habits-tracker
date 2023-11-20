@@ -1,4 +1,6 @@
-﻿using GoodBadHabitsTracker.Infrastructure.Persistance;
+﻿using GoodBadHabitsTracker.Core.Domain.Interfaces;
+using GoodBadHabitsTracker.Infrastructure.Persistance;
+using GoodBadHabitsTracker.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +18,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
         {
             services.AddDbContext<HabitsDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("Default")));
+            services.AddScoped<IHabitsRepository, HabitsRepository>();
         }
     }
 }

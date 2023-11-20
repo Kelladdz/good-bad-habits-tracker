@@ -1,4 +1,5 @@
 using GoodBadHabitsTracker.Infrastructure.Extensions;
+using GoodBadHabitsTracker.Core.Extensions;
 using GoodBadHabitsTracker.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

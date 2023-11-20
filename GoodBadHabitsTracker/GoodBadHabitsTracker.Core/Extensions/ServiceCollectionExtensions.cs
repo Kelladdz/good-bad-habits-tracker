@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using GoodBadHabitsTracker.Core.Mappings;
+using GoodBadHabitsTracker.Core.Services.HabitsService;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +11,10 @@ namespace GoodBadHabitsTracker.Core.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static void AddApplication(this IServiceCollection )
+        public static void AddApplication(this IServiceCollection services)
+        {
+            services.AddScoped<IHabitsService, HabitsService>();
+            services.AddAutoMapper(typeof(HabitsMappingProfile));
+        }
     }
 }

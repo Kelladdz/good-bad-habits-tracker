@@ -1,4 +1,5 @@
 ﻿using GoodBadHabitsTracker.Core.Domain.Models;
+using GoodBadHabitsTracker.Core.DTOs;
 using GoodBadHabitsTracker.Core.Services.HabitsService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,10 +17,10 @@ namespace GoodBadHabitsTracker.API.Controllers
             _habitsService = habitsService;
         }
         [HttpPost("habits")]
-        public async Task<ActionResult> Create(Habit habit)
+        public async Task<ActionResult> Create(HabitDto habit)
         {
             await _habitsService.Create(habit);
-            return RedirectToAction(nameof(Create));
+            return RedirectToAction(nameof(Create)); //na później
         }
     }
 }

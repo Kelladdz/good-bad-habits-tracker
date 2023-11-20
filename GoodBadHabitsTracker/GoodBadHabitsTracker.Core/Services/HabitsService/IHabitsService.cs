@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GoodBadHabitsTracker.Core.Domain.Models;
+using GoodBadHabitsTracker.Core.DTOs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace GoodBadHabitsTracker.Core.Services.HabitsService
 {
-    internal interface IHabitsService
+    public interface IHabitsService
     {
+        Task Create(HabitDto habitDto);
     }
 }

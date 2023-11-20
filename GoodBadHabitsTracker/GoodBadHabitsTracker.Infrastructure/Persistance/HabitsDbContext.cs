@@ -1,4 +1,4 @@
-﻿using GoodBadHabitsTracker.Core.Domain;
+﻿using GoodBadHabitsTracker.Core.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -26,10 +26,6 @@ namespace GoodBadHabitsTracker.Infrastructure.Persistance
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Habit>().ToTable("Habits");
-            string habitJson = System.IO.File.ReadAllText("habits.json");
-            Habit habit = System.Text.Json.JsonSerializer.Deserialize<Habit>(habitJson);
-            modelBuilder.Entity<Habit>().HasData(habit);
         }
     }
 }
