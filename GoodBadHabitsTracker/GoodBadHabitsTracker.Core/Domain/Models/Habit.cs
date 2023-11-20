@@ -6,12 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GoodBadHabitsTracker.Core.Domain
+namespace GoodBadHabitsTracker.Core.Domain.Models
 {
     public class Habit
     {
         [Key]
-        public Guid HabitId { get; set; }
+        public Guid HabitId { get; private set; }
         [Required(ErrorMessage = "Name is required.")]
         [StringLength(100, ErrorMessage = "Maximum length of name is 100.")]
         public string? Name { get; set; }
@@ -27,5 +27,7 @@ namespace GoodBadHabitsTracker.Core.Domain
         [MinimumDateValidator]
         public DateOnly StartDate { get; set; }
         public TimeOnly ReminderTime { get; set; }
+
+        public void GenerateId() => HabitId = Guid.NewGuid();
     }
 }
