@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using GoodBadHabitsTracker.Core.Domain.Models;
 using GoodBadHabitsTracker.Core.DTOs;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace GoodBadHabitsTracker.Core.Mappings
     {
         public HabitsMappingProfile()
         {
-            CreateMap<HabitDto, HabitDto>();
+            CreateMap<HabitDto, Habit>();
         }
     }
 }

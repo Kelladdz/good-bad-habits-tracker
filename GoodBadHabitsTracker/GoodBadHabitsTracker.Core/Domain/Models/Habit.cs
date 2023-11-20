@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace GoodBadHabitsTracker.Core.Domain.Models
@@ -20,10 +21,14 @@ namespace GoodBadHabitsTracker.Core.Domain.Models
         public bool? IsGoalInTime { get; set; }
         [Range(1, 100, ErrorMessage = "Quantity should be between ${1} and ${2}")]
         public byte? Quantity { get; set; }
+        [AllowedValues("daily", "weekly", "monthly")]
         public string? Frequency { get; set; }
         public bool? IsRepeatDaily { get; set; }
+        [AllowedValues("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")]
+        
         public string[]? RepeatDaysOfWeek { get; set; }
-        public byte[]? RepeatDaysOfMonth { get; set; }
+        [Range(1, 31)]
+        public int[]? RepeatDaysOfMonth { get; set; }
         [MinimumDateValidator]
         public DateOnly StartDate { get; set; }
         public TimeOnly ReminderTime { get; set; }

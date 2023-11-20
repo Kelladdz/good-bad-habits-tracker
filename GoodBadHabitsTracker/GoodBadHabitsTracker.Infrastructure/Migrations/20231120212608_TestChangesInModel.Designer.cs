@@ -4,6 +4,7 @@ using GoodBadHabitsTracker.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GoodBadHabitsTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(HabitsDbContext))]
-    partial class HabitsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231120212608_TestChangesInModel")]
+    partial class TestChangesInModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,40 +31,10 @@ namespace GoodBadHabitsTracker.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Frequency")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool?>("IsGoalInTime")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsGood")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsRepeatDaily")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<byte?>("Quantity")
-                        .HasColumnType("tinyint");
-
-                    b.Property<TimeOnly>("ReminderTime")
-                        .HasColumnType("time");
-
-                    b.Property<string>("RepeatDaysOfMonth")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RepeatDaysOfWeek")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateOnly>("StartDate")
-                        .HasColumnType("date");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("HabitId");
 
