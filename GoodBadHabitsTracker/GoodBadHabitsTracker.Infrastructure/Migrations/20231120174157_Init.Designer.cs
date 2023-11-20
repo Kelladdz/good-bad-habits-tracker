@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GoodBadHabitsTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(HabitsDbContext))]
-    [Migration("20231120171417_Init")]
+    [Migration("20231120174157_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -68,7 +68,22 @@ namespace GoodBadHabitsTracker.Infrastructure.Migrations
 
                     b.HasKey("HabitId");
 
-                    b.ToTable("Habits");
+                    b.ToTable("Habits", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            HabitId = new Guid("6ecb8c16-d048-4e9b-8d30-26792bf54de4"),
+                            Frequency = "daily",
+                            IsGoalInTime = true,
+                            IsGood = true,
+                            Name = "TestHabit",
+                            Quantity = (byte)1,
+                            ReminderTime = new TimeOnly(12, 0, 0),
+                            RepeatDaysOfWeek = "[\"monday\",\"saturday\"]",
+                            StartDate = new DateOnly(2023, 11, 25),
+                            UserId = new Guid("62907db2-763d-4fcf-98fa-d8f0da76d00b")
+                        });
                 });
 #pragma warning restore 612, 618
         }

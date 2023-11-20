@@ -1,4 +1,5 @@
-﻿using System;
+﻿using good_bad_habits_tracker_api.Core.Validators;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -23,6 +24,7 @@ namespace GoodBadHabitsTracker.Core.Domain
         public bool? IsRepeatDaily { get; set; }
         public string[]? RepeatDaysOfWeek { get; set; }
         public byte[]? RepeatDaysOfMonth { get; set; }
+        [MinimumDateValidator]
         public DateOnly StartDate { get; set; }
         public TimeOnly ReminderTime { get; set; }
     }

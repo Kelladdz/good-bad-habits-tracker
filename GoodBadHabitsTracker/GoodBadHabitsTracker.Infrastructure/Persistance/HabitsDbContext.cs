@@ -21,5 +21,15 @@ namespace GoodBadHabitsTracker.Infrastructure.Persistance
         }
 
         public DbSet<Habit> Habits { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Habit>().ToTable("Habits");
+            string habitJson = System.IO.File.ReadAllText("habits.json");
+            Habit habit = System.Text.Json.JsonSerializer.Deserialize<Habit>(habitJson);
+            modelBuilder.Entity<Habit>().HasData(habit);
+        }
     }
 }
