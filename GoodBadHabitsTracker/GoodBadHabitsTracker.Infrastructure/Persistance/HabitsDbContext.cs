@@ -21,10 +21,5 @@ namespace GoodBadHabitsTracker.Infrastructure.Persistance
         }
 
         public DbSet<Habit> Habits { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=GoodBadHabitsTrackerDb;Trusted_Connection=True;");
-        }
     }
 }
