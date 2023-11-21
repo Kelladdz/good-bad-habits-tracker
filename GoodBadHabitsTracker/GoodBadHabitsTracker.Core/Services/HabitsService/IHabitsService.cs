@@ -10,6 +10,7 @@ namespace GoodBadHabitsTracker.Core.Services.HabitsService
 {
     public interface IHabitsService
     {
+        Task<IEnumerable<Habit>> GetHabits();
         Task<Habit> Create(HabitDto habitDto);
     }
 }

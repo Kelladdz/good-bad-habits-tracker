@@ -16,6 +16,20 @@ namespace GoodBadHabitsTracker.API.Controllers
         {
             _habitsService = habitsService;
         }
+        [HttpGet("habits")]
+        public async Task<ActionResult<IEnumerable<Habit>>> GetHabits()
+        {
+            IEnumerable<Habit> habits = await _habitsService.GetHabits();
+            if (!habits.Any()) return NotFound();
+            return Ok(habits);
+        }
+        [HttpGet("habits/{habitId}")]
+        public async Task<ActionResult<Habit>> GetHabitById(Guid habitId)
+        {
+            var habit = await _habitsService.GetHabitById(habitId);
+            if(habit == null) return NotFound();
+            return Ok(habit);
+        }
         [HttpPost("habits")]
         public async Task<IActionResult> Create([FromBody]HabitDto habitDto)
         {
@@ -28,7 +42,18 @@ namespace GoodBadHabitsTracker.API.Controllers
                 return NotFound();
             }
             var habit = await _habitsService.Create(habitDto);
-            return CreatedAtAction(nameof(Create), new {habitId = habit.HabitId}, habit); //na później
+            return CreatedAtAction(nameof(GetHabits), new {habitId = habit.HabitId}, habit); //na później
+        }
+        [HttpPut("habits/{habitId}")]
+        public async Task<IActionResult> Edit(Guid habitId)
+        {
+            var habitResponse = await _habitsService.GetHabitById(habitId);
+            if(habitResponse == null)
+            {
+                return NotFound();
+            }
+            await _habitsService.Edit(habitResponse);
+            return NoContent();
         }
     }
 }

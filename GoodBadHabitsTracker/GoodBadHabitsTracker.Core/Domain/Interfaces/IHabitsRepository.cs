@@ -9,6 +9,7 @@ namespace GoodBadHabitsTracker.Core.Domain.Interfaces
 {
     public interface IHabitsRepository
     {
+        Task<IEnumerable<Habit>> GetHabits();
         Task Create(Habit habit);
     }
 }
