@@ -17,18 +17,18 @@ namespace GoodBadHabitsTracker.API.Controllers
             _habitsService = habitsService;
         }
         [HttpPost("habits")]
-        public async Task<ActionResult<Habit>> Create([FromBody]HabitDto habitDto)
+        public async Task<IActionResult> Create([FromBody]HabitDto habitDto)
         {
             if(!ModelState.IsValid)
             {
-                return ValidationProblem(ModelState);
+                return BadRequest(ModelState);
             }
             if(habitDto == null)
             {
-                return Problem("Entity is null.");
+                return NotFound();
             }
-            await _habitsService.Create(habitDto);
-            return Ok(); //na później
+            var habit = await _habitsService.Create(habitDto);
+            return CreatedAtAction(nameof(Create), new {habitId = habit.HabitId}, habit); //na później
         }
     }
 }

@@ -20,7 +20,7 @@ namespace GoodBadHabitsTracker.Core.Services.HabitsService
             _habitsRepository = habitsRepository;
             _mapper = mapper;
         }
-        public async Task Create(HabitDto habitDto)
+        public async Task<Habit> Create(HabitDto habitDto)
         {
             var habit = _mapper.Map<Habit>(habitDto);
             if(habit.IsRepeatDaily == true && habit.RepeatDaysOfMonth != null)
@@ -29,6 +29,7 @@ namespace GoodBadHabitsTracker.Core.Services.HabitsService
                 throw new Exception("If repeat is month then days of week to repeat should be null.");
             habit.GenerateId();
             await _habitsRepository.Create(habit);
+            return habit;
         }
     }
 }
