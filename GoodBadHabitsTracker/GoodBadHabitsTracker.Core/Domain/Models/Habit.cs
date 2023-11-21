@@ -21,10 +21,10 @@ namespace GoodBadHabitsTracker.Core.Domain.Models
         public bool? IsGoalInTime { get; set; }
         [Range(1, 100, ErrorMessage = "Quantity should be between ${1} and ${2}")]
         public byte? Quantity { get; set; }
-        [AllowedValues("daily", "weekly", "monthly")]
+        [AllowedValues("daily", "weekly", "monthly", null)]
         public string? Frequency { get; set; }
         public bool? IsRepeatDaily { get; set; }
-        [AllowedValues("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")]
+        [AllowedValues("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", null)]
         
         public string[]? RepeatDaysOfWeek { get; set; }
         [Range(1, 31)]

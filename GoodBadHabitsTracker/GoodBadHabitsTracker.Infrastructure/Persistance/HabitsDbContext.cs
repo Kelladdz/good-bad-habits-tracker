@@ -20,7 +20,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Persistance
             
         }
 
-        public DbSet<Habit> Habits { get; set; }
+        public virtual DbSet<Habit> Habits { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
