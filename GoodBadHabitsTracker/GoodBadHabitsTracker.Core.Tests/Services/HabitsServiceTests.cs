@@ -30,12 +30,15 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
         private readonly ITestOutputHelper _testOutputHelper;
         private readonly DataGenerator _generator;
         private readonly IMapper _mapper;
+        private readonly Mock<IMapper> _mapperMock;
 
         public HabitsServiceTests(ITestOutputHelper testOutputHelper)
         {
             _generator = new DataGenerator();
             _habitsRepositoryMock = new Mock<IHabitsRepository>();
             _habitsRepository = _habitsRepositoryMock.Object;
+            _mapperMock = new Mock<IMapper>();
+            _mapper = _mapperMock.Object;
 
             var habitsInitialData = new List<Habit>() { };
 
@@ -149,7 +152,96 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
             //Act
             Func<Task> action = async () => await _habitsService.Create(habitDto);
 
+            //Assert
             await action.Should().ThrowAsync<Exception>();
+        }
+
+        [Fact]
+        public async Task Create_DataIsValid_ReturnsObject()
+        {
+            //Arrange
+
+            var habitDto = _generator.SeedDto();
+            _mapperMock.Setup(temp => temp.Map<Habit>(It.IsAny<HabitDto>())).Returns((HabitDto habitDto) =>
+            {
+                var habit = _generator.Seed();
+                return habit;
+            });
+
+            //Act
+            var action = await _habitsService.Create(habitDto);
+
+            //Assert
+            action.Should().NotBeNull();
+            action.Should().BeOfType<Habit>();
+        }
+
+        [Fact]
+        public async Task Edit_HabitIsNull_ThrowNullException()
+        {
+            //Arrange
+            Habit habit = null;
+            HabitDto habitDto = null;
+
+            //Act
+            Func<Task> action = async () => await _habitsService.Edit(habit, habitDto);
+
+            //Assert
+            await action.Should().ThrowAsync<ArgumentNullException>();
+        }
+
+        [Fact]
+        public async Task Edit_HabitExists_ReturnObject()
+        {
+            //Arrange
+            Habit habit = _generator.Seed();
+            HabitDto habitDto = _generator.SeedDto();
+
+            //Act
+            var action = await _habitsService.Edit(habit, habitDto);
+
+            //Assert
+            action.Should().NotBeNull();
+            action.Should().BeOfType<Habit>();
+        }
+
+        [Fact]
+        public async Task Delete_HabitIsNull_ThrowNullException()
+        {
+            //Arrange
+            Habit habit = null;
+
+            //Act
+            Func<Task> action = async () => await _habitsService.Delete(habit);
+
+            //Assert
+            await action.Should().ThrowAsync<ArgumentNullException>();
+        }
+
+        [Fact]
+        public async Task Delete_HabitExists_ReturnNothing()
+        {
+            //Arrange
+            Habit habit = _generator.Seed();
+
+            //Act //Assert
+            Func<Task> action = async () => await _habitsService.Delete(habit);
+
+            //Assert
+            await action.Should().NotThrowAsync<Exception>();
+        }
+
+        [Fact]
+        public async Task DeleteAll_ReturnNothing()
+        {
+            //Arrange
+            IEnumerable<Habit> habits = _generator.SeedCollection(10);
+
+            //Act //Assert
+            Func<Task> action = async () => await _habitsService.DeleteAll();
+
+            //Assert
+            await action.Should().NotThrowAsync<Exception>();
         }
     }
 }
