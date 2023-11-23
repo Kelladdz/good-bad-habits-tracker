@@ -1,4 +1,5 @@
-﻿using GoodBadHabitsTracker.Core.Domain.Models;
+﻿using AutoMapper;
+using GoodBadHabitsTracker.Core.Domain.Models;
 using GoodBadHabitsTracker.Core.DTOs;
 using GoodBadHabitsTracker.Core.Services.HabitsService;
 using Microsoft.AspNetCore.Http;
@@ -11,10 +12,12 @@ namespace GoodBadHabitsTracker.API.Controllers
     public class HabitsController : ControllerBase
     {
         private readonly IHabitsService _habitsService;
+        private readonly IMapper _mapper;
 
-        public HabitsController(IHabitsService habitsService)
+        public HabitsController(IHabitsService habitsService, IMapper mapper)
         {
             _habitsService = habitsService;
+            _mapper = mapper;
         }
         [HttpGet("habits")]
         public async Task<ActionResult<IEnumerable<Habit>>> GetHabits()
@@ -45,14 +48,29 @@ namespace GoodBadHabitsTracker.API.Controllers
             return CreatedAtAction(nameof(GetHabits), new {habitId = habit.HabitId}, habit); //na później
         }
         [HttpPut("habits/{habitId}")]
-        public async Task<IActionResult> Edit(Guid habitId)
+        public async Task<IActionResult> Edit([FromBody]HabitDto habitDto, Guid habitId)
         {
             var habitResponse = await _habitsService.GetHabitById(habitId);
-            if(habitResponse == null)
+
+            if(habitResponse == null) return NotFound();
+            await _habitsService.Edit(habitResponse, habitDto);
+            return NoContent();
+        }
+        [HttpDelete("habits/{habitId}")]
+        public async Task<IActionResult> Delete(Guid habitId)
+        {
+            var habitResponse = await _habitsService.GetHabitById(habitId);
+            if (habitResponse == null)
             {
                 return NotFound();
             }
-            await _habitsService.Edit(habitResponse);
+            await _habitsService.Delete(habitResponse);
+            return NoContent();
+        }
+        [HttpDelete("habits")]
+        public async Task<IActionResult> DeleteAll()
+        {
+            await _habitsService.DeleteAll();
             return NoContent();
         }
     }

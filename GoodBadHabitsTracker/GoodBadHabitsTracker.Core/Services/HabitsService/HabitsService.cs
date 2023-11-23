@@ -27,19 +27,28 @@ namespace GoodBadHabitsTracker.Core.Services.HabitsService
         public async Task<Habit> Create(HabitDto habitDto)
         {
             var habit = _mapper.Map<Habit>(habitDto);
-            if(habit.IsRepeatDaily == true && habit.RepeatDaysOfMonth != null)
+            if(habit.IsRepeatDaily == true && habit.RepeatDaysOfMonth.Length > 0)
                 throw new Exception("If repeat is daily then days of month to repeat should be null.");
-            if (habit.IsRepeatDaily == false && habit.RepeatDaysOfWeek != null)
+            if (habit.IsRepeatDaily == false && habit.RepeatDaysOfWeek.Length > 0)
                 throw new Exception("If repeat is month then days of week to repeat should be null.");
             habit.GenerateId();
             await _habitsRepository.Create(habit);
             return habit;
         }
-        public async Task<Habit> Edit(Habit habit)
+        public async Task<Habit> Edit(Habit habit, HabitDto habitDto)
         {
             if (habit == null) throw new ArgumentNullException(nameof(habit));
-            await _habitsRepository.Edit(habit);
+            await _habitsRepository.Edit(habit, habitDto);
             return habit;
+        }
+        public async Task Delete(Habit habit)
+        {
+            if (habit == null) throw new ArgumentNullException(nameof(habit));
+            await _habitsRepository.Delete(habit);
+        }
+        public async Task DeleteAll()
+        {
+            await _habitsRepository.DeleteAll();
         }
     }
 }

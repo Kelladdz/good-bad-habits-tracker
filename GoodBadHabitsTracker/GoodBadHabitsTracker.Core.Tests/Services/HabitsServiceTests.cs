@@ -91,7 +91,7 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
                 Frequency = "daily",
                 IsRepeatDaily = false,
                 RepeatDaysOfWeek = ["monday", "friday"],
-                RepeatDaysOfMonth = null,
+                RepeatDaysOfMonth = [],
                 StartDate = new DateOnly(2023, 12, 21),
                 ReminderTime = new TimeOnly(12, 0, 0)
             };
@@ -115,8 +115,8 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
                 Quantity = 8,
                 Frequency = "daily",
                 IsRepeatDaily = true,
-                RepeatDaysOfWeek = null,
-                RepeatDaysOfMonth = null,
+                RepeatDaysOfWeek = [],
+                RepeatDaysOfMonth = [],
                 StartDate = new DateOnly(2023, 12, 21),
                 ReminderTime = new TimeOnly(12, 0, 0)
             };
@@ -141,7 +141,7 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
                 Frequency = "daily",
                 IsRepeatDaily = false,
                 RepeatDaysOfWeek = ["monday"],
-                RepeatDaysOfMonth = null,
+                RepeatDaysOfMonth = [],
                 StartDate = new DateOnly(2023, 12, 21),
                 ReminderTime = new TimeOnly(12, 0, 0)
             };

@@ -1,4 +1,5 @@
 ﻿using good_bad_habits_tracker_api.Core.Validators;
+using GoodBadHabitsTracker.Core.Validators;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -19,16 +20,14 @@ namespace GoodBadHabitsTracker.Core.Domain.Models
         public Guid UserId { get; set; }
         public bool IsGood { get; set; }
         public bool? IsGoalInTime { get; set; }
-        [Range(1, 100, ErrorMessage = "Quantity should be between ${1} and ${2}")]
         public byte? Quantity { get; set; }
-        [AllowedValues("daily", "weekly", "monthly", null)]
+        [AllowedValues("daily", "weekly", "monthly")]
         public string? Frequency { get; set; }
         public bool? IsRepeatDaily { get; set; }
-        [AllowedValues("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", null)]
-        
+        [DaysOfWeekValidator]
         public string[]? RepeatDaysOfWeek { get; set; }
-        [Range(1, 31)]
-        public int[]? RepeatDaysOfMonth { get; set; }
+        [DaysOfMonthValidator]
+        public int[] RepeatDaysOfMonth { get; set; }
         [MinimumDateValidator]
         public DateOnly StartDate { get; set; }
         public TimeOnly ReminderTime { get; set; }
