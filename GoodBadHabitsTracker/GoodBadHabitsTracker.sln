@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GoodBadHabitsTracker.Core.D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GoodBadHabitsTracker.Core.Tests", "GoodBadHabitsTracker.Core.Tests\GoodBadHabitsTracker.Core.Tests.csproj", "{2D433EE7-C33E-46ED-92E1-58BC4F4AD6D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoodBadHabitsTracker.API.Tests", "GoodBadHabitsTracker.API.Tests\GoodBadHabitsTracker.API.Tests.csproj", "{325A1489-4FCB-456E-9A11-D0C83AF912FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GoodBadHabitsTracker.API.Tests", "GoodBadHabitsTracker.API.Tests\GoodBadHabitsTracker.API.Tests.csproj", "{325A1489-4FCB-456E-9A11-D0C83AF912FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoodBadHabitsTracker.TestMisc", "GoodBadHabitsTracker.TestMisc\GoodBadHabitsTracker.TestMisc.csproj", "{9315BC95-BD7B-4F8F-AD83-38E112A56057}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{325A1489-4FCB-456E-9A11-D0C83AF912FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{325A1489-4FCB-456E-9A11-D0C83AF912FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{325A1489-4FCB-456E-9A11-D0C83AF912FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9315BC95-BD7B-4F8F-AD83-38E112A56057}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9315BC95-BD7B-4F8F-AD83-38E112A56057}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9315BC95-BD7B-4F8F-AD83-38E112A56057}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9315BC95-BD7B-4F8F-AD83-38E112A56057}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

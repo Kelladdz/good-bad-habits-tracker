@@ -27,7 +27,7 @@ namespace GoodBadHabitsTracker.Core.Domain.Models
         [DaysOfWeekValidator]
         public string[]? RepeatDaysOfWeek { get; set; }
         [DaysOfMonthValidator]
-        public int[] RepeatDaysOfMonth { get; set; }
+        public int[]? RepeatDaysOfMonth { get; set; }
         [MinimumDateValidator]
         public DateOnly StartDate { get; set; }
         public TimeOnly ReminderTime { get; set; }

@@ -9,6 +9,7 @@ using GoodBadHabitsTracker.Core.DTOs;
 using GoodBadHabitsTracker.Core.Services.HabitsService;
 using GoodBadHabitsTracker.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
+using GoodBadHabitsTracker.TestMisc;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -27,13 +28,12 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
         private readonly Mock<IHabitsRepository> _habitsRepositoryMock;
         private readonly IHabitsRepository _habitsRepository;
         private readonly ITestOutputHelper _testOutputHelper;
-        private readonly IFixture _fixture;
+        private readonly DataGenerator _generator;
         private readonly IMapper _mapper;
 
         public HabitsServiceTests(ITestOutputHelper testOutputHelper)
         {
-            _fixture = new Fixture();
-            _fixture.Customizations.Add(new NumericRangedRequestRelay());
+            _generator = new DataGenerator();
             _habitsRepositoryMock = new Mock<IHabitsRepository>();
             _habitsRepository = _habitsRepositoryMock.Object;
 

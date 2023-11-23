@@ -36,14 +36,8 @@ namespace GoodBadHabitsTracker.API.Controllers
         [HttpPost("habits")]
         public async Task<IActionResult> Create([FromBody]HabitDto habitDto)
         {
-            if(!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            if(habitDto == null)
-            {
-                return NotFound();
-            }
+            if(!ModelState.IsValid) return BadRequest(ModelState);
+            if (habitDto == null) return NotFound();
             var habit = await _habitsService.Create(habitDto);
             return CreatedAtAction(nameof(GetHabits), new {habitId = habit.HabitId}, habit); //na później
         }
@@ -60,16 +54,17 @@ namespace GoodBadHabitsTracker.API.Controllers
         public async Task<IActionResult> Delete(Guid habitId)
         {
             var habitResponse = await _habitsService.GetHabitById(habitId);
-            if (habitResponse == null)
-            {
-                return NotFound();
-            }
+
+            if (habitResponse == null) return NotFound();
+
             await _habitsService.Delete(habitResponse);
             return NoContent();
         }
         [HttpDelete("habits")]
         public async Task<IActionResult> DeleteAll()
         {
+            IEnumerable<Habit> habits = await _habitsService.GetHabits();
+            if (!habits.Any()) return NotFound();
             await _habitsService.DeleteAll();
             return NoContent();
         }
