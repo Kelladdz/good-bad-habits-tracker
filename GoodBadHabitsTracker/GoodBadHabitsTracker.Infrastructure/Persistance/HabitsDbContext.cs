@@ -1,4 +1,6 @@
-﻿using GoodBadHabitsTracker.Core.Domain.Models;
+﻿using GoodBadHabitsTracker.Core.Domain.IdentityModels;
+using GoodBadHabitsTracker.Core.Domain.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -8,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace GoodBadHabitsTracker.Infrastructure.Persistance
 {
-    public class HabitsDbContext : DbContext
+    public class HabitsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
     {
         public HabitsDbContext(DbContextOptions<HabitsDbContext> options) : base(options)
         {
