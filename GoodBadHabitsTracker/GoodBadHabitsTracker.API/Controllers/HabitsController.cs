@@ -2,6 +2,7 @@
 using GoodBadHabitsTracker.Core.Domain.Models;
 using GoodBadHabitsTracker.Core.DTOs;
 using GoodBadHabitsTracker.Core.Services.HabitsService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,8 +21,10 @@ namespace GoodBadHabitsTracker.API.Controllers
             _mapper = mapper;
         }
         [HttpGet("habits")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Habit>>> GetHabits()
         {
+            var user = User;
             IEnumerable<Habit> habits = await _habitsService.GetHabits();
             if (!habits.Any()) return NotFound();
             return Ok(habits);

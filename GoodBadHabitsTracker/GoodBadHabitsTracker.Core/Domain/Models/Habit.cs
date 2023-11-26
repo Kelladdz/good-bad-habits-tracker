@@ -1,5 +1,7 @@
 ﻿using good_bad_habits_tracker_api.Core.Validators;
+using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.Validators;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -18,6 +20,7 @@ namespace GoodBadHabitsTracker.Core.Domain.Models
         [StringLength(100, ErrorMessage = "Maximum length of name is 100.")]
         public string? Name { get; set; }
         public Guid UserId { get; set; }
+        public ApplicationUser User { get; set; }
         public bool IsGood { get; set; }
         public bool? IsGoalInTime { get; set; }
         public byte? Quantity { get; set; }
