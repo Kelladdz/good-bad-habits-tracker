@@ -23,14 +23,17 @@ namespace GoodBadHabitsTracker.Infrastructure.Persistance
         }
 
         public virtual DbSet<Habit> Habits { get; set; }
+        public virtual DbSet<ApplicationUser> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Habit>()
-                .HasOne(e => e.User)
-                .WithMany(e => e.Habits);
+            modelBuilder.Entity<Habit>(e =>
+            {
+                e.HasOne<ApplicationUser>(h => h.User)
+                .WithMany(u => u.Habits);
+            });
         }
     }
 }

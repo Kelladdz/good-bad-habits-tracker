@@ -10,7 +10,7 @@ namespace GoodBadHabitsTracker.Core.Domain.IdentityModels
 {
     public class ApplicationUser : IdentityUser<Guid>
     {
-        public ICollection<Habit> Habits { get; set; } = new List<Habit>();
+        public ICollection<Habit>? Habits { get; set; } = new List<Habit>();
         public string? Avatar { get; set; }
     }
 }
