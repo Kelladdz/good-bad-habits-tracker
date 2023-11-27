@@ -26,7 +26,6 @@ namespace GoodBadHabitsTracker.API.Controllers
         [HttpGet("habits/{habitId}")]
         public async Task<ActionResult<Habit>> GetHabitById(Guid habitId)
         {
-            var userId = userAccessor.GetLoggedUserId();
             var habit = await habitsService.GetHabitById(habitId);
             if(habit == null) return NotFound();
             return Ok(habit);
