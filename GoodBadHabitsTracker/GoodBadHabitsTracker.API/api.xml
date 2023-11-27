@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>GoodBadHabitsTracker.API</name>
+    </assembly>
+    <members>
+        <member name="M:GoodBadHabitsTracker.API.Controllers.v1.HabitsController.GetHabits">
+            <summary>
+            To get list of habits from "Habits" table.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:GoodBadHabitsTracker.API.Controllers.v1.HabitsController.GetHabitById(System.Guid)">
+            <summary>
+            To get habit by Id.
+            </summary>
+            <param name="habitId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:GoodBadHabitsTracker.API.Controllers.v1.HabitsController.Create(GoodBadHabitsTracker.Core.DTOs.HabitDto)">
+            <summary>
+            To create a new habit.
+            </summary>
+            <param name="habitDto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:GoodBadHabitsTracker.API.Controllers.v1.HabitsController.Edit(GoodBadHabitsTracker.Core.DTOs.HabitDto,System.Guid)">
+            <summary>
+            To edit a specific habit and save changes.
+            </summary>
+            <param name="habitDto"></param>
+            <param name="habitId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:GoodBadHabitsTracker.API.Controllers.v1.HabitsController.Delete(System.Guid)">
+            <summary>
+            To delete a habit from database.
+            </summary>
+            <param name="habitId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:GoodBadHabitsTracker.API.Controllers.v1.HabitsController.DeleteAll">
+            <summary>
+            To delete all habits from database.
+            </summary>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

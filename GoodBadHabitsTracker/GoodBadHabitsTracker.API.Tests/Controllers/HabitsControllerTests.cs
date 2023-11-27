@@ -3,7 +3,7 @@ using AutoFixture.Xunit2;
 using AutoMapper;
 using Azure;
 using FluentAssertions;
-using GoodBadHabitsTracker.API.Controllers;
+using GoodBadHabitsTracker.API.Controllers.v1;
 using GoodBadHabitsTracker.Core.Domain.Models;
 using GoodBadHabitsTracker.Core.DTOs;
 using GoodBadHabitsTracker.Core.Services.HabitsService;

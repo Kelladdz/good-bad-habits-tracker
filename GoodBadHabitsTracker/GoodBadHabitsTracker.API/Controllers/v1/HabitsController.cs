@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using Asp.Versioning;
+using AutoMapper;
 using GoodBadHabitsTracker.Core.Domain.Models;
 using GoodBadHabitsTracker.Core.DTOs;
 using GoodBadHabitsTracker.Core.Services.HabitsService;
@@ -7,15 +8,18 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GoodBadHabitsTracker.API.Controllers
+namespace GoodBadHabitsTracker.API.Controllers.v1
 {
-    [Route("API")]
+    [ApiVersion("1.0")]
     [ApiController]
     [Authorize]
-    public class HabitsController(IHabitsService habitsService, IMapper mapper, IUserAccessor userAccessor) : ControllerBase
+    public class HabitsController(IHabitsService habitsService, IMapper mapper, IUserAccessor userAccessor) : CustomControllerBase
     {
+        /// <summary>
+        /// To get list of habits from "Habits" table.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("habits")]
-
         public async Task<ActionResult<IEnumerable<Habit>>> GetHabits()
         {
             var userId = userAccessor.GetLoggedUserId();
@@ -23,32 +27,51 @@ namespace GoodBadHabitsTracker.API.Controllers
             if (!habits.Any()) return NotFound();
             return Ok(habits);
         }
+        /// <summary>
+        /// To get habit by Id.
+        /// </summary>
+        /// <param name="habitId"></param>
+        /// <returns></returns>
         [HttpGet("habits/{habitId}")]
         public async Task<ActionResult<Habit>> GetHabitById(Guid habitId)
         {
             var habit = await habitsService.GetHabitById(habitId);
-            if(habit == null) return NotFound();
+            if (habit == null) return NotFound();
             return Ok(habit);
         }
+        /// <summary>
+        /// To create a new habit.
+        /// </summary>
+        /// <param name="habitDto"></param>
+        /// <returns></returns>
         [HttpPost("habits")]
-
-        public async Task<IActionResult> Create([FromBody]HabitDto habitDto)
+        public async Task<IActionResult> Create([FromBody] HabitDto habitDto)
         {
-            if(!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
             if (habitDto == null) return NotFound();
             var userId = userAccessor.GetLoggedUserId();
             var habit = await habitsService.Create(habitDto, userId);
-            return CreatedAtAction(nameof(GetHabits), new {habitId = habit.HabitId}, habit); //na później
+            return CreatedAtAction(nameof(GetHabits), new { habitId = habit.HabitId }, habit); //na później
         }
+        /// <summary>
+        /// To edit a specific habit and save changes.
+        /// </summary>
+        /// <param name="habitDto"></param>
+        /// <param name="habitId"></param>
+        /// <returns></returns>
         [HttpPut("habits/{habitId}")]
-
-        public async Task<IActionResult> Edit([FromBody]HabitDto habitDto, Guid habitId)
+        public async Task<IActionResult> Edit([FromBody] HabitDto habitDto, Guid habitId)
         {
             var habitResponse = await habitsService.GetHabitById(habitId);
-            if(habitResponse == null) return NotFound();
+            if (habitResponse == null) return NotFound();
             await habitsService.Edit(habitResponse, habitDto);
             return NoContent();
         }
+        /// <summary>
+        /// To delete a habit from database.
+        /// </summary>
+        /// <param name="habitId"></param>
+        /// <returns></returns>
         [HttpDelete("habits/{habitId}")]
         public async Task<IActionResult> Delete(Guid habitId)
         {
@@ -59,6 +82,10 @@ namespace GoodBadHabitsTracker.API.Controllers
             await habitsService.Delete(habitResponse);
             return NoContent();
         }
+        /// <summary>
+        /// To delete all habits from database.
+        /// </summary>
+        /// <returns></returns>
         [HttpDelete("habits")]
         public async Task<IActionResult> DeleteAll()
         {

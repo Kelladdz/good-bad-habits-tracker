@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using Newtonsoft.Json;
+using Asp.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +17,10 @@ builder.Services.AddControllers().AddNewtonsoftJson(options =>
     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
 });
 builder.Services.AddDateOnlyTimeOnlyStringConverters();
-
+builder.Services.AddApiVersioning(config =>
+{
+    config.ApiVersionReader = new UrlSegmentApiVersionReader();
+});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -30,6 +34,7 @@ builder.Services.AddSwaggerGen(options =>
         Type = SecuritySchemeType.ApiKey
     });
     options.OperationFilter<SecurityRequirementsOperationFilter>();
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "api.xml"));
 });
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
