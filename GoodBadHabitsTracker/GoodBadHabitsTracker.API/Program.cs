@@ -9,35 +9,13 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using Newtonsoft.Json;
 using Asp.Versioning;
+using GoodBadHabitsTracker.API.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers().AddNewtonsoftJson(options =>
-{
-    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-});
-builder.Services.AddDateOnlyTimeOnlyStringConverters();
-builder.Services.AddApiVersioning(config =>
-{
-    config.ApiVersionReader = new UrlSegmentApiVersionReader();
-});
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.UseDateOnlyTimeOnlyStringConverters();
-    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey
-    });
-    options.OperationFilter<SecurityRequirementsOperationFilter>();
-    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "api.xml"));
-});
+builder.Services.AddUi(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddApplication();
+builder.Services.AddCore();
 builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
     .AddEntityFrameworkStores<HabitsDbContext>();

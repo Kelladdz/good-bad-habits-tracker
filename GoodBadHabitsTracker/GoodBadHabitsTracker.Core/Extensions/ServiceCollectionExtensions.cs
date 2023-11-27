@@ -12,7 +12,7 @@ namespace GoodBadHabitsTracker.Core.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static void AddApplication(this IServiceCollection services)
+        public static void AddCore(this IServiceCollection services)
         {
             services.AddScoped<IHabitsService, HabitsService>();
             services.AddAutoMapper(typeof(HabitsMappingProfile));
