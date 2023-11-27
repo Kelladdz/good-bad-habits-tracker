@@ -63,7 +63,6 @@ namespace GoodBadHabitsTracker.TestMisc
         {
             var habitsGenerator = new Faker<HabitDto>()
                 .RuleFor(h => h.Name, f => f.Name.JobTitle())
-                .RuleFor(h => h.UserId, f => Guid.NewGuid())
                 .RuleFor(h => h.IsGood, f => f.Random.Bool())
                 .RuleFor(h => h.IsGoalInTime, f => f.Random.Bool())
                 .RuleFor(h => h.Quantity, f => f.Random.Byte())
@@ -77,5 +76,6 @@ namespace GoodBadHabitsTracker.TestMisc
             HabitDto habitDto = habitsGenerator.Generate();
             return habitDto;
         }
+
     }
 }

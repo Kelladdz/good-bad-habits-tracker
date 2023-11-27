@@ -61,7 +61,6 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
             var habitDto = new HabitDto()
             {
                 Name = "Drink Water",
-                UserId = Guid.Parse("f47e0a9d-36c2-4b77-ba15-123456789abc"),
                 IsGood = true,
                 IsGoalInTime = true,
                 Quantity = 8,
@@ -73,8 +72,10 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
                 ReminderTime = new TimeOnly(12, 0, 0)
             };
 
+            var userId = Guid.NewGuid();
+
             //Act
-            Func<Task> action = async () => await _habitsService.Create(habitDto);
+            Func<Task> action = async () => await _habitsService.Create(habitDto, userId);
 
             await action.Should().ThrowAsync<Exception>();
         }
@@ -87,7 +88,6 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
             var habitDto = new HabitDto()
             {
                 Name = "Drink Water",
-                UserId = Guid.Parse("f47e0a9d-36c2-4b77-ba15-123456789abc"),
                 IsGood = true,
                 IsGoalInTime = true,
                 Quantity = 8,
@@ -99,8 +99,10 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
                 ReminderTime = new TimeOnly(12, 0, 0)
             };
 
+            var userId = Guid.NewGuid();
+
             //Act
-            Func<Task> action = async () => await _habitsService.Create(habitDto);
+            Func<Task> action = async () => await _habitsService.Create(habitDto, userId);
 
             await action.Should().ThrowAsync<Exception>();
         }
@@ -112,7 +114,6 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
             var habitDto = new HabitDto()
             {
                 Name = "Drink Water",
-                UserId = Guid.Parse("f47e0a9d-36c2-4b77-ba15-123456789abc"),
                 IsGood = true,
                 IsGoalInTime = true,
                 Quantity = 8,
@@ -124,8 +125,10 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
                 ReminderTime = new TimeOnly(12, 0, 0)
             };
 
+            var userId = Guid.NewGuid();
+
             //Act
-            Func<Task> action = async () => await _habitsService.Create(habitDto);
+            Func<Task> action = async () => await _habitsService.Create(habitDto, userId);
 
             await action.Should().ThrowAsync<Exception>();
         }
@@ -137,7 +140,6 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
             var habitDto = new HabitDto()
             {
                 Name = "Drink Water",
-                UserId = Guid.Parse("f47e0a9d-36c2-4b77-ba15-123456789abc"),
                 IsGood = true,
                 IsGoalInTime = true,
                 Quantity = 8,
@@ -149,8 +151,10 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
                 ReminderTime = new TimeOnly(12, 0, 0)
             };
 
+            var userId = Guid.NewGuid();
+
             //Act
-            Func<Task> action = async () => await _habitsService.Create(habitDto);
+            Func<Task> action = async () => await _habitsService.Create(habitDto, userId);
 
             //Assert
             await action.Should().ThrowAsync<Exception>();
@@ -168,8 +172,10 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
                 return habit;
             });
 
+            var userId = Guid.NewGuid();
+
             //Act
-            var action = await _habitsService.Create(habitDto);
+            var action = await _habitsService.Create(habitDto, userId);
 
             //Assert
             action.Should().NotBeNull();
@@ -236,9 +242,10 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
         {
             //Arrange
             IEnumerable<Habit> habits = _generator.SeedCollection(10);
+            var userId = Guid.NewGuid();
 
             //Act //Assert
-            Func<Task> action = async () => await _habitsService.DeleteAll();
+            Func<Task> action = async () => await _habitsService.DeleteAll(userId);
 
             //Assert
             await action.Should().NotThrowAsync<Exception>();

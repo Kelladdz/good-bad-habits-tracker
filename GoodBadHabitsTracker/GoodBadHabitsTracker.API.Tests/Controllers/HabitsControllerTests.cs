@@ -7,6 +7,7 @@ using GoodBadHabitsTracker.API.Controllers;
 using GoodBadHabitsTracker.Core.Domain.Models;
 using GoodBadHabitsTracker.Core.DTOs;
 using GoodBadHabitsTracker.Core.Services.HabitsService;
+using GoodBadHabitsTracker.Core.Services.UserAccessor;
 using GoodBadHabitsTracker.TestMisc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace GoodBadHabitsTracker.API.Tests.Controllers
 {
@@ -28,13 +31,19 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers
         private readonly IMapper _mapper;
         private readonly Mock<IMapper> _mapperMock;
         private readonly DataGenerator _generator;
+        private readonly IUserAccessor _userAccessor;
+        private readonly Mock<IUserAccessor> _userAccessorMock;
+        private readonly ITestOutputHelper _testOutputHelper;
 
-        public HabitsControllerTests()
+        public HabitsControllerTests(ITestOutputHelper testOutputHelper)
         {
             _habitsServiceMock = new Mock<IHabitsService>();
             _habitsService = _habitsServiceMock.Object;
             _mapperMock = new Mock<IMapper>();
             _mapper = _mapperMock.Object;
+            _userAccessorMock = new Mock<IUserAccessor>();
+            _userAccessor = _userAccessorMock.Object;
+            _testOutputHelper = testOutputHelper;
             _generator = new DataGenerator();
         }
 
@@ -43,8 +52,8 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers
         {
             //Arrange
             IEnumerable<Habit> response = _generator.SeedCollection(5);
-            HabitsController habitsController = new HabitsController(_habitsService, _mapper);
-            _habitsServiceMock.Setup(temp => temp.GetHabits()).Returns(Task.FromResult(response));
+            HabitsController habitsController = new HabitsController(_habitsService, _mapper, _userAccessor);
+            _habitsServiceMock.Setup(temp => temp.GetHabits(It.IsAny<Guid>())).Returns(Task.FromResult(response));
 
             //Act
             var result = await habitsController.GetHabits();
@@ -59,8 +68,8 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers
         {
             //Arrange
             IEnumerable<Habit> response = [];
-            HabitsController habitsController = new HabitsController(_habitsService, _mapper);
-            _habitsServiceMock.Setup(temp => temp.GetHabits()).Returns(Task.FromResult(response));
+            HabitsController habitsController = new HabitsController(_habitsService, _mapper, _userAccessor);
+            _habitsServiceMock.Setup(temp => temp.GetHabits(It.IsAny<Guid>())).Returns(Task.FromResult(response));
 
             //Act
             var result = await habitsController.GetHabits();
@@ -74,7 +83,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers
         {
             //Arrange
             Habit? response = _generator.Seed();
-            HabitsController habitsController = new HabitsController(_habitsService, _mapper);
+            HabitsController habitsController = new HabitsController(_habitsService, _mapper, _userAccessor);
             _habitsServiceMock.Setup(temp => temp.GetHabitById(It.IsAny<Guid>())).Returns(Task.FromResult(response));
 
             //Act
@@ -89,7 +98,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers
         {
             //Arrange
             Habit? response = null;
-            HabitsController habitsController = new HabitsController(_habitsService, _mapper);
+            HabitsController habitsController = new HabitsController(_habitsService, _mapper, _userAccessor);
             _habitsServiceMock.Setup(temp => temp.GetHabitById(It.IsAny<Guid>())).Returns(Task.FromResult(response));
 
             //Act
@@ -105,8 +114,8 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers
             //Arrange
             var request = _generator.SeedDto();
             var response = _generator.Seed();
-            _habitsServiceMock.Setup(temp => temp.Create(It.IsAny<HabitDto>())).Returns(Task.FromResult(response));
-            HabitsController habitsController = new HabitsController(_habitsService, _mapper);
+            _habitsServiceMock.Setup(temp => temp.Create(It.IsAny<HabitDto>(), It.IsAny<Guid>())).Returns(Task.FromResult(response));
+            HabitsController habitsController = new HabitsController(_habitsService, _mapper, _userAccessor);
 
             //Act
             var result = await habitsController.Create(request);
@@ -121,9 +130,9 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers
         {
             //Arrange
             var request = _generator.SeedDto();
-            HabitsController habitsController = new HabitsController(_habitsService, _mapper);
+            HabitsController habitsController = new HabitsController(_habitsService, _mapper, _userAccessor);
             habitsController.ModelState.AddModelError("StartDate", "Start date should be in future or today.");
-            
+
 
             //Act            
             var result = await habitsController.Create(request) as ObjectResult;
@@ -138,7 +147,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers
         {
             //Arrange
             HabitDto request = null;
-            HabitsController habitsController = new HabitsController(_habitsService, _mapper);
+            HabitsController habitsController = new HabitsController(_habitsService, _mapper, _userAccessor);
 
             //Act
             var result = await habitsController.Create(request);
@@ -156,7 +165,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers
             Habit response = null;
 
             _habitsServiceMock.Setup(temp => temp.Edit(It.IsAny<Habit>(), It.IsAny<HabitDto>())).Returns(Task.FromResult(response));
-            HabitsController habitsController = new HabitsController(_habitsService, _mapper);
+            HabitsController habitsController = new HabitsController(_habitsService, _mapper, _userAccessor);
 
             //Act
             var result = await habitsController.Create(request);
@@ -174,7 +183,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers
             Habit response = _generator.Seed();
             _habitsServiceMock.Setup(temp => temp.GetHabitById(It.IsAny<Guid>())).Returns(Task.FromResult(response));
             _habitsServiceMock.Setup(temp => temp.Edit(It.IsAny<Habit>(), It.IsAny<HabitDto>())).Returns(Task.FromResult(response));
-            HabitsController habitsController = new HabitsController(_habitsService, _mapper);
+            HabitsController habitsController = new HabitsController(_habitsService, _mapper, _userAccessor);
 
             //Act
             var result = await habitsController.Edit(request, It.IsAny<Guid>());
@@ -191,7 +200,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers
             Habit response = null;
             _habitsServiceMock.Setup(temp => temp.GetHabitById(It.IsAny<Guid>())).Returns(Task.FromResult(response));
             _habitsServiceMock.Setup(temp => temp.Delete(It.IsAny<Habit>())).Returns(Task.FromResult(response));
-            HabitsController habitsController = new HabitsController(_habitsService, _mapper);
+            HabitsController habitsController = new HabitsController(_habitsService, _mapper, _userAccessor);
 
             //Act
             var result = await habitsController.Delete(It.IsAny<Guid>());
@@ -208,7 +217,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers
             Habit response = _generator.Seed();
             _habitsServiceMock.Setup(temp => temp.GetHabitById(It.IsAny<Guid>())).Returns(Task.FromResult(response));
             _habitsServiceMock.Setup(temp => temp.Delete(It.IsAny<Habit>())).Returns(Task.FromResult(response));
-            HabitsController habitsController = new HabitsController(_habitsService, _mapper);
+            HabitsController habitsController = new HabitsController(_habitsService, _mapper, _userAccessor);
 
             //Act
             var result = await habitsController.Delete(It.IsAny<Guid>());
@@ -223,9 +232,9 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers
         {
             //Arrange
             IEnumerable<Habit> response = [];
-            _habitsServiceMock.Setup(temp => temp.GetHabits()).Returns(Task.FromResult(response));
-            _habitsServiceMock.Setup(temp => temp.DeleteAll()).Returns(Task.FromResult(response));
-            HabitsController habitsController = new HabitsController(_habitsService, _mapper);
+            _habitsServiceMock.Setup(temp => temp.GetHabits(It.IsAny<Guid>())).Returns(Task.FromResult(response));
+            _habitsServiceMock.Setup(temp => temp.DeleteAll(It.IsAny<Guid>())).Returns(Task.FromResult(response));
+            HabitsController habitsController = new HabitsController(_habitsService, _mapper, _userAccessor);
 
             //Act
             var result = await habitsController.DeleteAll();
@@ -240,9 +249,9 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers
         {
             //Arrange
             IEnumerable<Habit> response = _generator.SeedCollection(10);
-            _habitsServiceMock.Setup(temp => temp.GetHabits()).Returns(Task.FromResult(response));
-            _habitsServiceMock.Setup(temp => temp.DeleteAll()).Returns(Task.FromResult(response));
-            HabitsController habitsController = new HabitsController(_habitsService, _mapper);
+            _habitsServiceMock.Setup(temp => temp.GetHabits(It.IsAny<Guid>())).Returns(Task.FromResult(response));
+            _habitsServiceMock.Setup(temp => temp.DeleteAll(It.IsAny<Guid>())).Returns(Task.FromResult(response));
+            HabitsController habitsController = new HabitsController(_habitsService, _mapper, _userAccessor);
 
             //Act
             var result = await habitsController.DeleteAll();
