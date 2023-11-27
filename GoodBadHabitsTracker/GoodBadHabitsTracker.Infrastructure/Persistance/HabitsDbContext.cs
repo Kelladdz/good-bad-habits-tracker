@@ -10,18 +10,8 @@ using System.Threading.Tasks;
 
 namespace GoodBadHabitsTracker.Infrastructure.Persistance
 {
-    public class HabitsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
+    public class HabitsDbContext(DbContextOptions<HabitsDbContext> options) : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options)
     {
-        public HabitsDbContext(DbContextOptions<HabitsDbContext> options) : base(options)
-        {
-            
-        }
-
-        public HabitsDbContext()
-        {
-            
-        }
-
         public virtual DbSet<Habit> Habits { get; set; }
         public virtual DbSet<ApplicationUser> Users { get; set; }
 

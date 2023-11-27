@@ -11,23 +11,16 @@ using System.Threading.Tasks;
 
 namespace GoodBadHabitsTracker.Infrastructure.Repositories
 {
-    public class HabitsRepository : IHabitsRepository
+    public class HabitsRepository(HabitsDbContext dbContext) : IHabitsRepository
     {
-        private readonly HabitsDbContext _dbContext;
+        public async Task<IEnumerable<Habit>> GetHabits() => await dbContext.Habits.ToListAsync();
 
-        public HabitsRepository(HabitsDbContext dbContext)
-        {
-            _dbContext = dbContext;
-        }
-
-        public async Task<IEnumerable<Habit>> GetHabits() => await _dbContext.Habits.ToListAsync();
-
-        public async Task<Habit?> GetHabitById(Guid habitId) => await _dbContext.Habits.FindAsync(habitId);
+        public async Task<Habit?> GetHabitById(Guid habitId) => await dbContext.Habits.FindAsync(habitId);
 
         public async Task Create(Habit habit)
         {
-            _dbContext.Habits.Add(habit);
-            await _dbContext.SaveChangesAsync();
+            dbContext.Habits.Add(habit);
+            await dbContext.SaveChangesAsync();
         }
         public async Task Edit(Habit habit, HabitDto habitDto)
         {
@@ -45,19 +38,19 @@ namespace GoodBadHabitsTracker.Infrastructure.Repositories
             habit.StartDate = habitDto.StartDate;
             habit.ReminderTime = habitDto.ReminderTime;
 
-            await _dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
         }
 
         public async Task Delete(Habit habit)
         {
-            _dbContext.Habits.Remove(habit);
-            await _dbContext.SaveChangesAsync();
+            dbContext.Habits.Remove(habit);
+            await dbContext.SaveChangesAsync();
         }
         public async Task DeleteAll()
         {
             var habits = await GetHabits();
-            _dbContext.Habits.RemoveRange(habits);
-            await _dbContext.SaveChangesAsync();
+            dbContext.Habits.RemoveRange(habits);
+            await dbContext.SaveChangesAsync();
         }
     }
 }

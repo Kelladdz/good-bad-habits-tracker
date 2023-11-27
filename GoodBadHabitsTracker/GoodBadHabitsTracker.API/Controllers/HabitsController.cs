@@ -10,65 +10,58 @@ namespace GoodBadHabitsTracker.API.Controllers
 {
     [Route("API")]
     [ApiController]
-    public class HabitsController : ControllerBase
+    public class HabitsController(IHabitsService habitsService, IMapper mapper) : ControllerBase
     {
-        private readonly IHabitsService _habitsService;
-        private readonly IMapper _mapper;
-
-        public HabitsController(IHabitsService habitsService, IMapper mapper)
-        {
-            _habitsService = habitsService;
-            _mapper = mapper;
-        }
         [HttpGet("habits")]
         [Authorize]
         public async Task<ActionResult<IEnumerable<Habit>>> GetHabits()
         {
             var user = User;
-            IEnumerable<Habit> habits = await _habitsService.GetHabits();
+            IEnumerable<Habit> habits = await habitsService.GetHabits();
             if (!habits.Any()) return NotFound();
             return Ok(habits);
         }
         [HttpGet("habits/{habitId}")]
         public async Task<ActionResult<Habit>> GetHabitById(Guid habitId)
         {
-            var habit = await _habitsService.GetHabitById(habitId);
+            var habit = await habitsService.GetHabitById(habitId);
             if(habit == null) return NotFound();
             return Ok(habit);
         }
         [HttpPost("habits")]
+        [Authorize]
         public async Task<IActionResult> Create([FromBody]HabitDto habitDto)
         {
             if(!ModelState.IsValid) return BadRequest(ModelState);
             if (habitDto == null) return NotFound();
-            var habit = await _habitsService.Create(habitDto);
+            var habit = await habitsService.Create(habitDto);
             return CreatedAtAction(nameof(GetHabits), new {habitId = habit.HabitId}, habit); //na później
         }
         [HttpPut("habits/{habitId}")]
         public async Task<IActionResult> Edit([FromBody]HabitDto habitDto, Guid habitId)
         {
-            var habitResponse = await _habitsService.GetHabitById(habitId);
+            var habitResponse = await habitsService.GetHabitById(habitId);
 
             if(habitResponse == null) return NotFound();
-            await _habitsService.Edit(habitResponse, habitDto);
+            await habitsService.Edit(habitResponse, habitDto);
             return NoContent();
         }
         [HttpDelete("habits/{habitId}")]
         public async Task<IActionResult> Delete(Guid habitId)
         {
-            var habitResponse = await _habitsService.GetHabitById(habitId);
+            var habitResponse = await habitsService.GetHabitById(habitId);
 
             if (habitResponse == null) return NotFound();
 
-            await _habitsService.Delete(habitResponse);
+            await habitsService.Delete(habitResponse);
             return NoContent();
         }
         [HttpDelete("habits")]
         public async Task<IActionResult> DeleteAll()
         {
-            IEnumerable<Habit> habits = await _habitsService.GetHabits();
+            IEnumerable<Habit> habits = await habitsService.GetHabits();
             if (!habits.Any()) return NotFound();
-            await _habitsService.DeleteAll();
+            await habitsService.DeleteAll();
             return NoContent();
         }
     }

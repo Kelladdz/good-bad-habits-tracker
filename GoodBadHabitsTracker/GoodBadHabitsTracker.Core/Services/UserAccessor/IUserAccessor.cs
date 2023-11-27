@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace GoodBadHabitsTracker.Core.Services.UserAccessor
 {
-    internal interface IUserAccessor
+    public interface IUserAccessor
     {
+        Guid GetLoggeeUserId();
     }
 }
