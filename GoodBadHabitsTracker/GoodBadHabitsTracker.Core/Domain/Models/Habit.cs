@@ -36,6 +36,7 @@ namespace GoodBadHabitsTracker.Core.Domain.Models
         [MinimumDateValidator]
         public DateOnly StartDate { get; set; }
         public TimeOnly ReminderTime { get; set; }
+        public Stats Statistics { get; set; }
 
         public void GenerateId() => HabitId = Guid.NewGuid();
     }
