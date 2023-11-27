@@ -10,11 +10,11 @@ namespace GoodBadHabitsTracker.Core.Services.HabitsService
 {
     public interface IHabitsService
     {
-        Task<IEnumerable<Habit>> GetHabits();
+        Task<IEnumerable<Habit>> GetHabits(Guid userId);
         Task<Habit> GetHabitById(Guid habitId);
-        Task<Habit> Create(HabitDto habitDto);
+        Task<Habit> Create(HabitDto habitDto, Guid userId);
         Task<Habit> Edit(Habit habit, HabitDto habitDto);
         Task Delete(Habit habit);
-        Task DeleteAll();
+        Task DeleteAll(Guid userId);
     }
 }

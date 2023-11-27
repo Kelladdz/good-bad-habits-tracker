@@ -10,12 +10,12 @@ namespace GoodBadHabitsTracker.Core.Domain.Interfaces
 {
     public interface IHabitsRepository
     {
-        Task<IEnumerable<Habit>> GetHabits();
+        Task<IEnumerable<Habit>> GetHabits(Guid userId);
         Task<Habit?> GetHabitById(Guid habitId);
         Task Create(Habit habit);
         Task Edit(Habit habit, HabitDto habitDto);
         Task Delete(Habit habit);
-        Task DeleteAll();
+        Task DeleteAll(Guid userId);
 
 
     }

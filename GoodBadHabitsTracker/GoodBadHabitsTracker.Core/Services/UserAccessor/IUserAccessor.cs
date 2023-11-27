@@ -8,6 +8,6 @@ namespace GoodBadHabitsTracker.Core.Services.UserAccessor
 {
     public interface IUserAccessor
     {
-        Guid GetLoggeeUserId();
+        Guid GetLoggedUserId();
     }
 }

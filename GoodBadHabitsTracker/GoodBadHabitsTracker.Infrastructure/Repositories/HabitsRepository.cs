@@ -13,12 +13,12 @@ namespace GoodBadHabitsTracker.Infrastructure.Repositories
 {
     public class HabitsRepository(HabitsDbContext dbContext) : IHabitsRepository
     {
-        public async Task<IEnumerable<Habit>> GetHabits() => await dbContext.Habits.ToListAsync();
-
+        public async Task<IEnumerable<Habit>> GetHabits(Guid userId) => await dbContext.Habits.Where(x => x.UserId == userId).ToListAsync();
         public async Task<Habit?> GetHabitById(Guid habitId) => await dbContext.Habits.FindAsync(habitId);
-
         public async Task Create(Habit habit)
         {
+            var user = dbContext.Users.Find(habit.UserId);
+            habit.User = user;
             dbContext.Habits.Add(habit);
             await dbContext.SaveChangesAsync();
         }
@@ -46,9 +46,9 @@ namespace GoodBadHabitsTracker.Infrastructure.Repositories
             dbContext.Habits.Remove(habit);
             await dbContext.SaveChangesAsync();
         }
-        public async Task DeleteAll()
+        public async Task DeleteAll(Guid userId)
         {
-            var habits = await GetHabits();
+            var habits = await GetHabits(userId);
             dbContext.Habits.RemoveRange(habits);
             await dbContext.SaveChangesAsync();
         }
