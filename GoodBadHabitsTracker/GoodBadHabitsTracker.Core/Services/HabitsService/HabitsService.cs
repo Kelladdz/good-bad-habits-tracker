@@ -5,6 +5,7 @@ using GoodBadHabitsTracker.Core.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,7 +13,11 @@ namespace GoodBadHabitsTracker.Core.Services.HabitsService
 {
     public class HabitsService(IHabitsRepository habitsRepository, IMapper mapper) : IHabitsService
     {
-        public async Task<IEnumerable<Habit>> GetHabits(Guid userId) => await habitsRepository.GetHabits(userId);
+        public async Task<PagedHabitsResult> GetHabits(string? term, int page, int limit, DateOnly date, Guid userId)
+        {
+            return await habitsRepository.GetHabits(term, page, limit, date, userId);
+        }
+            
 
         public async Task<Habit> GetHabitById(Guid habitId) => await habitsRepository.GetHabitById(habitId);
 

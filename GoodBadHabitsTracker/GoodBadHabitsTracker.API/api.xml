@@ -4,7 +4,7 @@
         <name>GoodBadHabitsTracker.API</name>
     </assembly>
     <members>
-        <member name="M:GoodBadHabitsTracker.API.Controllers.v1.HabitsController.GetHabits">
+        <member name="M:GoodBadHabitsTracker.API.Controllers.v1.HabitsController.GetHabits(System.String,System.DateOnly,System.Int32,System.Int32)">
             <summary>
             To get list of habits from "Habits" table.
             </summary>

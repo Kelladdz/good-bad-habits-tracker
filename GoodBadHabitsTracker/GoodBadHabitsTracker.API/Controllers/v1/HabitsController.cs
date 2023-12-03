@@ -20,11 +20,12 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         /// </summary>
         /// <returns></returns>
         [HttpGet("habits")]
-        public async Task<ActionResult<IEnumerable<Habit>>> GetHabits()
+        [Authorize]
+        public async Task<IActionResult> GetHabits(string? term, DateOnly date, int page = 1, int limit = 10)
         {
             var userId = userAccessor.GetLoggedUserId();
-            IEnumerable<Habit> habits = await habitsService.GetHabits(userId);
-            if (!habits.Any()) return NotFound();
+            PagedHabitsResult habits = await habitsService.GetHabits(term, page, limit, date, userId);
+            if (habits.TotalCount == 0) return NotFound();
             return Ok(habits);
         }
         /// <summary>
@@ -90,8 +91,6 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         public async Task<IActionResult> DeleteAll()
         {
             var userId = userAccessor.GetLoggedUserId();
-            IEnumerable<Habit> habits = await habitsService.GetHabits(userId);
-            if (!habits.Any()) return NotFound();
             await habitsService.DeleteAll(userId);
             return NoContent();
         }

@@ -10,7 +10,7 @@ namespace GoodBadHabitsTracker.Core.Services.HabitsService
 {
     public interface IHabitsService
     {
-        Task<IEnumerable<Habit>> GetHabits(Guid userId);
+        Task<PagedHabitsResult> GetHabits(string? term, int page, int limit, DateOnly date, Guid userId);
         Task<Habit> GetHabitById(Guid habitId);
         Task<Habit> Create(HabitDto habitDto, Guid userId);
         Task<Habit> Edit(Habit habit, HabitDto habitDto);
