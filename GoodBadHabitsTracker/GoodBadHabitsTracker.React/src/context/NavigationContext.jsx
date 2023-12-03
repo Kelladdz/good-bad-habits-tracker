@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
+import { Button } from 'react-bootstrap';
 
 const NavigationContext = createContext();
 
@@ -15,7 +16,12 @@ export default function NavigationProvider({ children }) {
 		};
 	}, []);
 
-	return <NavigationContext.Provider value={{}}>{children}</NavigationContext.Provider>;
+	const navigate = to => {
+		window.history.pushState({}, '', to);
+		setCurrentPath(to);
+	};
+
+	return <NavigationContext.Provider value={{ currentPath, navigate }}>{children}</NavigationContext.Provider>;
 }
 
 export { NavigationProvider };
