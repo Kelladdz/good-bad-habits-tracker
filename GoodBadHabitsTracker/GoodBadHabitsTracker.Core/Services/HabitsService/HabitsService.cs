@@ -13,11 +13,8 @@ namespace GoodBadHabitsTracker.Core.Services.HabitsService
 {
     public class HabitsService(IHabitsRepository habitsRepository, IMapper mapper) : IHabitsService
     {
-        public async Task<PagedHabitsResult> GetHabits(string? term, int page, int limit, DateOnly date, Guid userId)
-        {
-            return await habitsRepository.GetHabits(term, page, limit, date, userId);
-        }
-            
+        public async Task<PagedHabitsResult> GetHabits(string? term, int page, int limit, DateOnly date, Guid userId) => 
+            await habitsRepository.GetHabits(term, page, limit, date, userId);
 
         public async Task<Habit> GetHabitById(Guid habitId) => await habitsRepository.GetHabitById(habitId);
 
