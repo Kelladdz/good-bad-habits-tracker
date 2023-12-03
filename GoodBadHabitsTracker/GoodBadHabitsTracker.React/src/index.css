@@ -10,10 +10,11 @@
 }
 
 body {
-	background-color: #eaeaea;
-	background-size: cover;
-	background-repeat: no-repeat;
-	min-height: 100%;
 	overflow-y: hidden;
 	overflow-x: hidden;
+	min-height: 100%;
+	background-color: #e2e2e2;
+	background-size: cover;
+	background-repeat: no-repeat;
+	font-family: Inter;
 }
