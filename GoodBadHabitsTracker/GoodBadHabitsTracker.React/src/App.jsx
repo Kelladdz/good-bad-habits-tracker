@@ -1,5 +1,8 @@
+import Link from './components/Link';
 import './App.css';
 
-function App() {}
+function App() {
+
+}
 
 export default App;

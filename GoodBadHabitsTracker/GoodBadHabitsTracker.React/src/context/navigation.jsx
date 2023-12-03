@@ -3,7 +3,7 @@ import { Button } from 'react-bootstrap';
 
 const NavigationContext = createContext();
 
-export default function NavigationProvider({ children }) {
+function NavigationProvider({ children }) {
 	const [currentPath, setCurrentPath] = useState(window.location.pathname);
 
 	useEffect(() => {
@@ -25,3 +25,4 @@ export default function NavigationProvider({ children }) {
 }
 
 export { NavigationProvider };
+export default NavigationContext;
