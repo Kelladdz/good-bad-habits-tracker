@@ -16,9 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddUi(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddCore();
-builder.Services.AddAuthorization();
-builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
-    .AddEntityFrameworkStores<HabitsDbContext>();
+
 
 var app = builder.Build();
 
