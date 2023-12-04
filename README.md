@@ -4,7 +4,7 @@
 [![Entity Framework version](https://img.shields.io/badge/ASP.NET_Identity-8.0.0-8A2BE2)](https://learn.microsoft.com/en-us/ef/) 
 ![API version](https://img.shields.io/badge/API-v1-blue)
 
-Web App for tracking habits powered by ASP.NET and Entity Framework.
+Web App for tracking habits powered by ASP.NET, Entity Framework and React.
 ## Technology stack
 
 - .NET 8
