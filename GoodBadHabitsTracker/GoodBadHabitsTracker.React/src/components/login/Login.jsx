@@ -27,19 +27,23 @@ export default function Login() {
 							<img className={css['user-icon']} src={Password}></img>
 							<input className={css['input-field']} type='password' placeholder='Password' />
 						</div>
-						<Button>Login</Button>
-						<Button>Register</Button>
+						<Button className={css['login-btn']}>Login</Button>
 					</form>
-
+					<a href='/signup' className={css['register-link']}>
+						Register
+					</a>
 					<div className={css['or-with-box']}>
 						<div className={css['line']}></div>
 						<span>or with</span>
 						<div className={css['line']}></div>
 					</div>
-
 					<div className='d-flex justify-content-between align-center mt-4 w-50'>
-						<img className={css['external-icon']} src={Google}></img>
-						<img className={css['external-icon']} src={Facebook}></img>
+						<a href='#'>
+							<img className={css['external-icon']} src={Google} />
+						</a>
+						<a href='#'>
+							<img className={css['external-icon']} src={Facebook} />
+						</a>
 					</div>
 				</div>
 			</div>

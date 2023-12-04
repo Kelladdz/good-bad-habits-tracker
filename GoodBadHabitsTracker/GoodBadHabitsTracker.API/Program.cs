@@ -16,8 +16,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddUi(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddCore();
-
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

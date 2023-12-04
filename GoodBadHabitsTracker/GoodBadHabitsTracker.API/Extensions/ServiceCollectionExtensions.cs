@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.Domain.Interfaces;
 using GoodBadHabitsTracker.Infrastructure.Persistance;
 using GoodBadHabitsTracker.Infrastructure.Repositories;
@@ -18,6 +19,9 @@ namespace GoodBadHabitsTracker.API.Extensions
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             });
             services.AddDateOnlyTimeOnlyStringConverters();
+            services.AddAuthorization();
+            services.AddIdentityApiEndpoints<ApplicationUser>()
+                .AddEntityFrameworkStores<HabitsDbContext>();
             services.AddApiVersioning(config =>
             {
                 config.ApiVersionReader = new UrlSegmentApiVersionReader();
