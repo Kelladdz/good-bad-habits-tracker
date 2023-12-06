@@ -1,23 +1,22 @@
-import css from './login.module.css';
+import css from './user.module.css';
 import Logo from '../../assets/logo.svg';
 import User from '../../assets/user.svg';
 import Password from '../../assets/password.svg';
-import Google from '../../assets/google.svg';
-import Facebook from '../../assets/facebook.svg';
 import { Button } from 'react-bootstrap';
+import Link from '../Link';
 
-export default function Login() {
+export default function Register() {
 	const handleSubmit = event => {
 		event.preventDefault();
 	};
 
 	return (
 		<div>
-			<div className={css['container']}>
+			<div className={css['register-container']}>
 				<div className='d-flex flex-column align-items-center'>
 					<img className='mt-5 mb-3 w-50' src={Logo}></img>
 					<p className={css['welcome-text']}>I'm glad you took matters into your own hands!</p>
-					<p className={css['sign-in-text']}>Sign in</p>
+					<p className={css['sign-in-text']}>Sign up</p>
 					<form onSubmit={handleSubmit}>
 						<div className={css['input-box']}>
 							<img className={css['user-icon']} src={User}></img>
@@ -27,23 +26,10 @@ export default function Login() {
 							<img className={css['user-icon']} src={Password}></img>
 							<input className={css['input-field']} type='password' placeholder='Password' />
 						</div>
-						<Button className={css['login-btn']}>Login</Button>
+						<Button className={css['submit-btn']}>Register</Button>
 					</form>
-					<a href='/signup' className={css['register-link']}>
-						Register
-					</a>
-					<div className={css['or-with-box']}>
-						<div className={css['line']}></div>
-						<span>or with</span>
-						<div className={css['line']}></div>
-					</div>
-					<div className='d-flex justify-content-between align-center mt-4 w-50'>
-						<a href='#'>
-							<img className={css['external-icon']} src={Google} />
-						</a>
-						<a href='#'>
-							<img className={css['external-icon']} src={Facebook} />
-						</a>
+					<div style={{ transform: 'translatey(2rem)' }}>
+						<Link to='/signin'>Back</Link>
 					</div>
 				</div>
 			</div>
