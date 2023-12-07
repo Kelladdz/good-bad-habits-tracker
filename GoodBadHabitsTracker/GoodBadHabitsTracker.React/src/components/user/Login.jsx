@@ -8,6 +8,14 @@ import { Button } from 'react-bootstrap';
 import Link from '../Link';
 
 export default function Login() {
+	const welcomeText = document.querySelector('.welcome-text');
+	const maxZoom = 0.1;
+	let zoom = 1;
+
+	const renderText = () => {
+		welcomeText.innerText = zoom;
+	};
+
 	const handleSubmit = event => {
 		event.preventDefault();
 	};
@@ -15,8 +23,8 @@ export default function Login() {
 	return (
 		<div>
 			<div className={css['login-container']}>
-				<div className='d-flex flex-column align-items-center'>
-					<img className='mt-5 mb-3 w-50' src={Logo}></img>
+				<div className='d-flex flex-column align-items-center relative'>
+					<img className={css['logo']} src={Logo}></img>
 					<p className={css['welcome-text']}>I'm glad you took matters into your own hands!</p>
 					<p className={css['sign-in-text']}>Sign in</p>
 					<form onSubmit={handleSubmit}>
@@ -29,21 +37,21 @@ export default function Login() {
 							<input className={css['input-field']} type='password' placeholder='Password' />
 						</div>
 						<Button className={css['submit-btn']}>Login</Button>
+						<div className={css['register-btn']}>
+							<Link to='/signup'>Register</Link>
+						</div>
 					</form>
-					<div style={{ transform: 'translatey(2rem)' }}>
-						<Link to='/signup'>Register</Link>
-					</div>
 
 					<div className={css['or-with-box']}>
 						<div className={css['line']}></div>
-						<span>or with</span>
+						<span>or</span>
 						<div className={css['line']}></div>
 					</div>
-					<div className='d-flex justify-content-between align-center mt-4 w-50'>
-						<a href='#'>
+					<div className={css['icons']}>
+						<a className={css['external-link']} href='#'>
 							<img className={css['external-icon']} src={Google} />
 						</a>
-						<a href='#'>
+						<a className={css['external-link']} style={{ paddingLeft: '3rem' }} href='#'>
 							<img className={css['external-icon']} src={Facebook} />
 						</a>
 					</div>

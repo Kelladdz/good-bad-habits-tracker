@@ -7,16 +7,28 @@ Button {
 	width: 86%;
 }
 
+form {
+	position: relative;
+	width: 80%;
+	padding-bottom: 5rem;
+}
+
 .login-container {
 	position: absolute;
 	left: 50%;
 	top: 50%;
 	transform: translate(-50%, -50%);
 	width: 30rem;
-	height: 43rem;
+	height: 45rem;
 	border-radius: 7px;
 	background-color: #fff;
 	box-shadow: 2px 2px 24px 0 rgba(0, 0, 0, 0.2);
+}
+
+.logo {
+	margin-top: 3rem;
+	margin-bottom: 1rem;
+	width: 50%;
 }
 
 .register-container {
@@ -25,7 +37,7 @@ Button {
 	top: 50%;
 	transform: translate(-50%, -50%);
 	width: 30rem;
-	height: 43rem;
+	height: 45rem;
 	border-radius: 7px;
 	background-color: #fff;
 	box-shadow: 2px 2px 24px 0 rgba(0, 0, 0, 0.2);
@@ -45,6 +57,7 @@ Button {
 	display: flex;
 	align-items: center;
 	border-bottom: 2px solid #d4d4d4;
+	min-height: 3.5rem;
 }
 
 .input-box:last-of-type {
@@ -58,6 +71,7 @@ Button {
 }
 
 .input-field {
+	width: 100%;
 	border: none;
 	padding: 0.3rem 1rem 0.3rem 1rem;
 	font-size: 1.5rem;
@@ -73,6 +87,8 @@ Button {
 }
 
 .or-with-box {
+	position: absolute;
+	bottom: 9rem;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -86,9 +102,17 @@ Button {
 }
 
 .submit-btn {
+	height: 2.5rem;
 	position: absolute;
 	left: 7%;
-	bottom: 35%;
+	bottom: 1rem;
+}
+
+.register-btn {
+	display: flex;
+	justify-content: center;
+	transform: translatey(7rem);
+	bottom: 0rem;
 }
 
 .back-link {
@@ -106,6 +130,198 @@ Button {
 	margin-left: 2rem;
 }
 
+.icons {
+	position: absolute;
+	bottom: 2rem;
+	display: flex;
+	justify-content: center;
+	gap: 5rem;
+	width: 50%;
+	flex: 1;
+	margin-top: 2rem;
+}
+
+.external-link {
+	display: inline-block;
+	height: 6rem;
+}
 .external-icon {
-	width: 4rem;
+	width: 6rem;
+}
+
+/*640px*/
+@media (max-width: 40em) {
+	.login-container {
+		max-width: 75%;
+		/* max-height: 30rem; */
+		max-height: calc(75vw * 1.5);
+	}
+
+	.welcome-text {
+		font-size: 0.8rem;
+	}
+
+	.sign-in-text {
+		font-size: 1.6rem;
+	}
+
+	.input-box {
+		max-height: 4vh;
+	}
+
+	.input-box:last-of-type {
+		margin-top: 0.5rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.input-field {
+		width: 100%;
+		padding: 0rem 0rem 0.3rem 0.3rem;
+		font-size: 1rem;
+	}
+
+	.submit-btn {
+		bottom: 1rem;
+	}
+
+	.user-icon {
+		width: 1.2rem;
+	}
+	.line {
+		margin-inline: 1rem;
+	}
+
+	.external-icon {
+		width: 14.4vw;
+	}
+}
+
+/*592px*/
+@media (max-width: 37em) {
+	.sign-in-text {
+		font-size: 1.6rem;
+	}
+
+	.input-box {
+		height: 3.6vh;
+	}
+
+	.input-field {
+		font-size: 0.8rem;
+	}
+
+	.or-with-box {
+		width: 100%;
+	}
+
+	.external-icon {
+		width: 14.4vw;
+	}
+}
+
+/*576px*/
+@media (max-width: 36em) {
+	.login-container {
+		min-width: 100vw;
+		/* max-height: 30rem; */
+		min-height: 100vh;
+	}
+
+	.welcome-text {
+		font-size: 0.9rem;
+	}
+
+	.sign-in-text {
+		font-size: 2.2rem;
+		margin-bottom: 1rem;
+	}
+
+	.input-box {
+		height: 5vh;
+	}
+
+	.input-field {
+		font-size: 0.8rem;
+	}
+
+	.submit-btn {
+		transform: scale(1.1);
+		bottom: 1rem;
+	}
+
+	.register-btn {
+		bottom: 0rem;
+		transform: scale(1.1) translate(0rem, 6rem);
+	}
+
+	.user-icon {
+		width: 1.2rem;
+	}
+
+	.or-with-box {
+		width: 100%;
+	}
+
+	.line {
+		margin-inline: 1rem;
+	}
+
+	.icons {
+		position: absolute;
+		bottom: 2rem;
+	}
+
+	.external-icon {
+		width: 20vw;
+	}
+}
+
+/*352px*/
+@media (max-width: 22em) {
+	.logo {
+		margin-top: 1rem;
+		margin-bottom: 0.5rem;
+	}
+	.welcome-text {
+		font-size: 0.6rem;
+		margin-bottom: 0;
+	}
+
+	.sign-in-text {
+		font-size: 1rem;
+		margin-bottom: 0rem;
+	}
+
+	.input-box {
+		min-height: 2.3rem;
+	}
+
+	.input-field {
+		font-size: 0.7rem;
+		padding: 0.1rem;
+	}
+
+	.submit-btn {
+		bottom: 4rem;
+		transform: scale(0.6);
+	}
+
+	.register-btn {
+		bottom: 4rem;
+		left: 4rem;
+		transform: translateY(2rem) scale(0.6);
+	}
+
+	.or-with-box {
+		bottom: 6rem;
+	}
+
+	.icons {
+		gap: 2.5rem;
+		bottom: -1rem;
+	}
+
+	.external-icon {
+		width: 3rem;
+	}
 }
