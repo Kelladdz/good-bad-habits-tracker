@@ -12,7 +12,7 @@ export default function Register() {
 
 	return (
 		<div>
-			<div className={css['register-container']}>
+			<div className={css['login-container']}>
 				<div className='d-flex flex-column align-items-center'>
 					<img className='mt-5 mb-3 w-50' src={Logo}></img>
 					<p className={css['welcome-text']}>I'm glad you took matters into your own hands!</p>
@@ -27,10 +27,10 @@ export default function Register() {
 							<input className={css['input-field']} type='password' placeholder='Password' />
 						</div>
 						<Button className={css['submit-btn']}>Register</Button>
+						<div className={css['register-btn']}>
+							<Link to='/signin'>Back</Link>
+						</div>
 					</form>
-					<div style={{ transform: 'translatey(2rem)' }}>
-						<Link to='/signin'>Back</Link>
-					</div>
 				</div>
 			</div>
 		</div>
