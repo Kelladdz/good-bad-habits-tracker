@@ -35,7 +35,7 @@ export default function Login() {
 						<div className={css['input-box']}>
 							<img className={css['user-icon']} src={Password}></img>
 							<input className={css['input-field']} type='password' placeholder='Password' />
-						</div>
+						</div>					
 						<Button className={css['submit-btn']}>Login</Button>
 						<div className={css['register-btn']}>
 							<Link to='/signup'>Register</Link>

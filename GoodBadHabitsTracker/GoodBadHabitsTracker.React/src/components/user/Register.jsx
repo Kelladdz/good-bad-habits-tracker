@@ -26,6 +26,10 @@ export default function Register() {
 							<img className={css['user-icon']} src={Password}></img>
 							<input className={css['input-field']} type='password' placeholder='Password' />
 						</div>
+						<div className={css['input-box']}>
+							<img className={css['user-icon']} src={Password}></img>
+							<input className={css['input-field']} type='password' placeholder='Confirm Password' />
+						</div>
 						<Button className={css['submit-btn']}>Register</Button>
 						<div className={css['register-btn']}>
 							<Link to='/signin'>Back</Link>

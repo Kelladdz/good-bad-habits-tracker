@@ -3,6 +3,7 @@ using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.Domain.Interfaces;
 using GoodBadHabitsTracker.Infrastructure.Persistance;
 using GoodBadHabitsTracker.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
@@ -14,6 +15,7 @@ namespace GoodBadHabitsTracker.API.Extensions
     {
         public static void AddUi(this IServiceCollection services, IConfiguration configuration)
         {
+            services.Configure<MailSettings>(configuration.GetSection("MailSettings"));
             services.AddControllers().AddNewtonsoftJson(options =>
             {
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
@@ -21,7 +23,7 @@ namespace GoodBadHabitsTracker.API.Extensions
             services.AddDateOnlyTimeOnlyStringConverters();
             services.AddAuthorization();
             services.AddIdentityApiEndpoints<ApplicationUser>()
-                .AddEntityFrameworkStores<HabitsDbContext>();
+                .AddEntityFrameworkStores<HabitsDbContext>().AddDefaultTokenProviders();
             services.AddApiVersioning(config =>
             {
                 config.ApiVersionReader = new UrlSegmentApiVersionReader();
@@ -41,7 +43,6 @@ namespace GoodBadHabitsTracker.API.Extensions
                 options.OperationFilter<SecurityRequirementsOperationFilter>();
                 options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "api.xml"));
             });
-
         }
     }
 }
