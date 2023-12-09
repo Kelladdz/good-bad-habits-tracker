@@ -2,17 +2,64 @@ import Link from './components/Link';
 import Route from './components/Route';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ConfirmPage from './pages/ConfirmPage';
+import MainContentPage from './pages/MainContentPage';
 import './App.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import useNavigation from './hooks/use-navigation';
+import { gapi } from 'gapi-script';
 
 function App() {
+	const {navigate} = useNavigation();
+	const[emailConfirmation, setEmailConfirmation] = useState(false);
+	const register = async(email, password) => {
+		const response = await axios.post('https://localhost:7154/register', {
+			email,
+			password
+		});
+	}
+
+	const login = async(email, password) => {
+		
+		const response = await axios.post('https://localhost:7154/login', {
+		email,
+		password});
+		const accessToken = response.data.tokenType + " " + response.data.accessToken;
+		console.log(response.data);
+		console.log(accessToken);
+		const iscConfirmResponse = await axios.get('https://localhost:7154/manage/info', {
+			headers: {
+				'accept': 'application/json',
+				'Authorization': accessToken
+			}
+		});
+		setEmailConfirmation(iscConfirmResponse.data.isEmailConfirmed);
+		console.log(iscConfirmResponse.data.isEmailConfirmed);
+		emailConfirmation ? navigate('/confirm') : navigate('/all-habits');
+	}
+
+	const googleLogin = async() => {
+		navigate("https://localhost:7154/signin-google");
+		const response = await axios.post("https://localhost:7154/signin-google")
+		console.log(response.data);
+	}
+
+	
+
 	return (
 		<>
 			<Route path='/signin'>
-				<LoginPage />
+				<LoginPage onLogin={login} onGoogleLogin={googleLogin}/>
 			</Route>
 			<Route path='/signup'>
-				<RegisterPage />
+				<RegisterPage onRegister={register}/>
+			</Route>
+			<Route path='/confirm'>
+				<ConfirmPage />
+			</Route>
+			<Route path='/all-habits'>
+				<MainContentPage />
 			</Route>
 		</>
 	);

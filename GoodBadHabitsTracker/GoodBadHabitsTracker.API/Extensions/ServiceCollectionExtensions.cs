@@ -1,8 +1,11 @@
 ﻿using Asp.Versioning;
+using GoodBadHabitsTracker.API.Services.EmailSender;
 using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.Domain.Interfaces;
 using GoodBadHabitsTracker.Infrastructure.Persistance;
 using GoodBadHabitsTracker.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -16,12 +19,25 @@ namespace GoodBadHabitsTracker.API.Extensions
         public static void AddUi(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<MailSettings>(configuration.GetSection("MailSettings"));
+            services.AddTransient<IEmailSender<ApplicationUser>, EmailSender>();
             services.AddControllers().AddNewtonsoftJson(options =>
             {
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             });
             services.AddDateOnlyTimeOnlyStringConverters();
             services.AddAuthorization();
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+            })
+                .AddCookie()
+                .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+                {
+                    options.ClientId = configuration.GetSection("web:client_id").Value;
+                    options.ClientSecret = configuration.GetSection("web:client_secret").Value;
+                });
+
             services.AddIdentityApiEndpoints<ApplicationUser>()
                 .AddEntityFrameworkStores<HabitsDbContext>().AddDefaultTokenProviders();
             services.AddApiVersioning(config =>

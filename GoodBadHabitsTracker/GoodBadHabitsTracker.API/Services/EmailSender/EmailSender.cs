@@ -27,20 +27,21 @@ namespace GoodBadHabitsTracker.API.Services.EmailSender
                     emailMessage.Subject = "Welcome To GoodBadHabitsTracker.";
 
                     BodyBuilder emailBodyBuilder = new BodyBuilder();
-                    emailBodyBuilder.TextBody = confirmationLink;
+                    emailBodyBuilder.HtmlBody = $"<p>{confirmationLink}</p>";
 
                     emailMessage.Body = emailBodyBuilder.ToMessageBody();
                     //this is the SmtpClient from the Mailkit.Net.Smtp namespace, not the System.Net.Mail one
                     using (SmtpClient mailClient = new SmtpClient())
                     {
+                        
+                        mailClient.CheckCertificateRevocation = false;
                         mailClient.Connect(mailSettings.Value.Host, mailSettings.Value.Port, MailKit.Security.SecureSocketOptions.StartTls);
-                        mailClient.Authenticate(mailSettings.Value.Email, mailSettings.Value.Password);
+                        mailClient.Authenticate("goodbadhabitstracker@gmail.com", "gpig isdo ytzx shjy");
                         mailClient.Send(emailMessage);
                         mailClient.Disconnect(true);
                     }
                 }
-
-                return null;
+            return Task.CompletedTask;
         }
 
         public Task SendPasswordResetCodeAsync(ApplicationUser user, string email, string resetCode)

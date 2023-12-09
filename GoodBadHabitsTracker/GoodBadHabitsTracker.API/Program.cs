@@ -16,6 +16,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddUi(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddCore();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder =>
+    {
+        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -27,9 +34,12 @@ if (app.Environment.IsDevelopment())
 
 app.MapIdentityApi<ApplicationUser>();
 
+app.UseHsts();
 app.UseHttpsRedirection();
 
 app.MapControllers();
+app.UseRouting();
+app.UseCors();
 
 app.UseAuthentication();
 

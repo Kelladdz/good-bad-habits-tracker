@@ -1,9 +1,9 @@
 import Register from '../components/user/Register';
 
-export default function LoginPage() {
+export default function RegisterPage({onRegister}) {
 	return (
 		<div>
-			<Register />
+			<Register onRegister={onRegister}/>
 		</div>
 	);
 }

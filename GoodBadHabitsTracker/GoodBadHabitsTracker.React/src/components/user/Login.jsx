@@ -6,19 +6,35 @@ import Google from '../../assets/google.svg';
 import Facebook from '../../assets/facebook.svg';
 import { Button } from 'react-bootstrap';
 import Link from '../Link';
+import { useState, useEffect } from 'react';
+import { GoogleLogin } from 'react-google-login';
 
-export default function Login() {
-	const welcomeText = document.querySelector('.welcome-text');
-	const maxZoom = 0.1;
-	let zoom = 1;
+export default function Login({onLogin, onGoogleLogin}) {
+	const [email, setEmail] = useState('');
+	const [password, setPassword] = useState('');
 
-	const renderText = () => {
-		welcomeText.innerText = zoom;
-	};
+	const clientId = "238617088969-cugrh0v8a7b0vfti8c42rjio7spms255.apps.googleusercontent.com";
 
 	const handleSubmit = event => {
 		event.preventDefault();
+		onLogin(email, password);
 	};
+
+	const handleChangeEmail = event => setEmail(event.target.value);
+	const handleChangePassword = event => setPassword(event.target.value);
+
+	const onSuccess = (res) => console.log("Success!", res.profileObj);
+    const onFailure = (res) => console.log("Fail!", res)
+
+	useEffect(() => {
+		function start() {
+			gapi.client.init({
+				clientId: clientId,
+				scope: ""
+			})
+		};
+		gapi.load('client:auth2', start);
+	})
 
 	return (
 		<div>
@@ -30,13 +46,13 @@ export default function Login() {
 					<form onSubmit={handleSubmit}>
 						<div className={css['input-box']}>
 							<img className={css['user-icon']} src={User}></img>
-							<input className={css['input-field']} placeholder='E-mail' />
+							<input className={css['input-field']} value={email} onChange={handleChangeEmail} placeholder='E-mail' />
 						</div>
 						<div className={css['input-box']}>
 							<img className={css['user-icon']} src={Password}></img>
-							<input className={css['input-field']} type='password' placeholder='Password' />
+							<input className={css['input-field']} value={password} type='password' onChange={handleChangePassword} placeholder='Password' />
 						</div>					
-						<Button className={css['submit-btn']}>Login</Button>
+						<Button className={css['submit-btn']} type='submit'>Login</Button>
 						<div className={css['register-btn']}>
 							<Link to='/signup'>Register</Link>
 						</div>
@@ -48,9 +64,17 @@ export default function Login() {
 						<div className={css['line']}></div>
 					</div>
 					<div className={css['icons']}>
-						<a className={css['external-link']} href='#'>
-							<img className={css['external-icon']} src={Google} />
-						</a>
+						<div id="signInButton">
+            				<GoogleLogin 
+                				clientId={clientId}
+                				
+                				onSuccess={onSuccess}
+								onFailure={onFailure}
+              					cookiePolicy={'single_host_origin'}
+                				isSignedIn={true}
+           					 />
+							 <img className={css['external-icon']} src={Google} />
+       					 </div>
 						<a className={css['external-link']} style={{ paddingLeft: '3rem' }} href='#'>
 							<img className={css['external-icon']} src={Facebook} />
 						</a>
