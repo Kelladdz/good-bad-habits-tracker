@@ -21,7 +21,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Persistance
 
             modelBuilder.Entity<Habit>(e =>
             {
-                e.HasOne<ApplicationUser>(h => h.User)
+                e.HasOne(h => h.User)
                 .WithMany(u => u.HabitsList);
             });
             modelBuilder.Entity<Habit>()

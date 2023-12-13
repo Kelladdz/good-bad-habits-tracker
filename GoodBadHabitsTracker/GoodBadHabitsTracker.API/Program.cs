@@ -32,7 +32,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapIdentityApi<ApplicationUser>();
 
 app.UseHsts();
 app.UseHttpsRedirection();

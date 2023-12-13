@@ -10,7 +10,16 @@ namespace GoodBadHabitsTracker.Core.Domain.IdentityModels
 {
     public class ApplicationUser : IdentityUser<Guid>
     {
+        public string? FirstName { get; set; } //google: givenName
+        public string? LastName { get; set; } //google: familyName
         public ICollection<Habit>? HabitsList { get; set; } = new List<Habit>();
-        public string? Avatar { get; set; }
+        public string? ImageUrl { get; set; } //google: imageUrl
+        public string? DisplayName { get; private set; }
+
+        public void setDisplayName()
+        {
+            StringBuilder sb = new StringBuilder();
+            DisplayName = sb.Append(FirstName).Append(" ").Append(LastName).ToString();
+        }
     }
 }

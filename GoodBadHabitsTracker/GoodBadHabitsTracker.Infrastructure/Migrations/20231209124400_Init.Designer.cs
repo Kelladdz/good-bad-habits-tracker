@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GoodBadHabitsTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(HabitsDbContext))]
-    [Migration("20231125214246_ModelsConfiguring")]
-    partial class ModelsConfiguring
+    [Migration("20231209124400_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -62,11 +62,11 @@ namespace GoodBadHabitsTracker.Infrastructure.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("Avatar")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DisplayName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
@@ -75,6 +75,9 @@ namespace GoodBadHabitsTracker.Infrastructure.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -276,9 +279,40 @@ namespace GoodBadHabitsTracker.Infrastructure.Migrations
             modelBuilder.Entity("GoodBadHabitsTracker.Core.Domain.Models.Habit", b =>
                 {
                     b.HasOne("GoodBadHabitsTracker.Core.Domain.IdentityModels.ApplicationUser", "User")
-                        .WithMany("Habits")
+                        .WithMany("HabitsList")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("GoodBadHabitsTracker.Core.Domain.Models.Stats", "Statistics", b1 =>
+                        {
+                            b1.Property<Guid>("HabitId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<int>("Complete")
+                                .HasColumnType("int");
+
+                            b1.Property<int>("Failed")
+                                .HasColumnType("int");
+
+                            b1.Property<int>("Skipped")
+                                .HasColumnType("int");
+
+                            b1.Property<int>("Streak")
+                                .HasColumnType("int");
+
+                            b1.Property<int>("Total")
+                                .HasColumnType("int");
+
+                            b1.HasKey("HabitId");
+
+                            b1.ToTable("Habits");
+
+                            b1.WithOwner()
+                                .HasForeignKey("HabitId");
+                        });
+
+                    b.Navigation("Statistics")
                         .IsRequired();
 
                     b.Navigation("User");
@@ -337,7 +371,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Migrations
 
             modelBuilder.Entity("GoodBadHabitsTracker.Core.Domain.IdentityModels.ApplicationUser", b =>
                 {
-                    b.Navigation("Habits");
+                    b.Navigation("HabitsList");
                 });
 #pragma warning restore 612, 618
         }

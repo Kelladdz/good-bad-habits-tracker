@@ -40,6 +40,7 @@ namespace GoodBadHabitsTracker.API.Extensions
 
             services.AddIdentityApiEndpoints<ApplicationUser>()
                 .AddEntityFrameworkStores<HabitsDbContext>().AddDefaultTokenProviders();
+            
             services.AddApiVersioning(config =>
             {
                 config.ApiVersionReader = new UrlSegmentApiVersionReader();

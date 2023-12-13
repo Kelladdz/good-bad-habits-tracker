@@ -6,7 +6,7 @@ import { Button } from 'react-bootstrap';
 import Link from '../Link';
 import { useState } from 'react';
 import useNavigation from '../../hooks/use-navigation';
-import {Navigate} from 'react-router-dom'
+
 
 export default function Register({onRegister}) {
 	const [email, setEmail] = useState('');

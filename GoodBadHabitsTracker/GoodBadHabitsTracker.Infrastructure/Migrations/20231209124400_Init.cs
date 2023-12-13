@@ -6,17 +6,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GoodBadHabitsTracker.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class Identity : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<Guid>(
-                name: "ApplicationUserId",
-                table: "Habits",
-                type: "uniqueidentifier",
-                nullable: true);
-
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
@@ -36,7 +30,8 @@ namespace GoodBadHabitsTracker.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Avatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -163,10 +158,38 @@ namespace GoodBadHabitsTracker.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Habits_ApplicationUserId",
-                table: "Habits",
-                column: "ApplicationUserId");
+            migrationBuilder.CreateTable(
+                name: "Habits",
+                columns: table => new
+                {
+                    HabitId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IsGood = table.Column<bool>(type: "bit", nullable: false),
+                    IsGoalInTime = table.Column<bool>(type: "bit", nullable: true),
+                    Quantity = table.Column<byte>(type: "tinyint", nullable: true),
+                    Frequency = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsRepeatDaily = table.Column<bool>(type: "bit", nullable: true),
+                    RepeatDaysOfWeek = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RepeatDaysOfMonth = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    StartDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    ReminderTime = table.Column<TimeOnly>(type: "time", nullable: false),
+                    Statistics_Streak = table.Column<int>(type: "int", nullable: false),
+                    Statistics_Complete = table.Column<int>(type: "int", nullable: false),
+                    Statistics_Failed = table.Column<int>(type: "int", nullable: false),
+                    Statistics_Skipped = table.Column<int>(type: "int", nullable: false),
+                    Statistics_Total = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Habits", x => x.HabitId);
+                    table.ForeignKey(
+                        name: "FK_Habits_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -207,21 +230,15 @@ namespace GoodBadHabitsTracker.Infrastructure.Migrations
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_Habits_AspNetUsers_ApplicationUserId",
+            migrationBuilder.CreateIndex(
+                name: "IX_Habits_UserId",
                 table: "Habits",
-                column: "ApplicationUserId",
-                principalTable: "AspNetUsers",
-                principalColumn: "Id");
+                column: "UserId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Habits_AspNetUsers_ApplicationUserId",
-                table: "Habits");
-
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -238,18 +255,13 @@ namespace GoodBadHabitsTracker.Infrastructure.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Habits");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Habits_ApplicationUserId",
-                table: "Habits");
-
-            migrationBuilder.DropColumn(
-                name: "ApplicationUserId",
-                table: "Habits");
         }
     }
 }
