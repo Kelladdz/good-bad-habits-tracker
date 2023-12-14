@@ -14,12 +14,11 @@ function App() {
 	const { navigate } = useNavigation();
 	// const [emailConfirmation, setEmailConfirmation] = useState(false);
 	const clientId = '238617088969-sbq9rl49dhr623f55j6ae2c5g32r6sqk.apps.googleusercontent.com';
-	const register = async (name, email, password, image) => {
-		const response = await axios.post('https://localhost:7154/API/user/register', {
+	const register = async (name, email, password) => {
+		const response = await axios.post('https://localhost:7154/API/User/Register', {
 			name,
 			email,
 			password,
-			image,
 		});
 	};
 

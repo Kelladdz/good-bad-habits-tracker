@@ -18,13 +18,13 @@ export default function Register({ onRegister }) {
 	const handleSubmit = event => {
 		event.preventDefault();
 		setSubmitted(true);
-		onRegister(email, name, password, image);
+		onRegister(name, email, password);
 	};
 
 	const handleChangeName = event => setName(event.target.value);
 	const handleChangeEmail = event => setEmail(event.target.value);
 	const handleChangePassword = event => setPassword(event.target.value);
-	const handleChangeImage = event => setImage(event.target.files[0]);
+	// const handleChangeImage = event => setImage(event.target.files[0]);
 
 	if (!submitted) {
 		return (
