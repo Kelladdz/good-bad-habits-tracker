@@ -25,7 +25,7 @@ namespace GoodBadHabitsTracker.API.Extensions
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             });
             services.AddDateOnlyTimeOnlyStringConverters();
-            services.AddAuthorization();
+            /*services.AddAuthorization();
             services.AddAuthentication(options =>
             {
                 options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -36,10 +36,7 @@ namespace GoodBadHabitsTracker.API.Extensions
                 {
                     options.ClientId = configuration.GetSection("web:client_id").Value;
                     options.ClientSecret = configuration.GetSection("web:client_secret").Value;
-                });
-
-            services.AddIdentityApiEndpoints<ApplicationUser>()
-                .AddEntityFrameworkStores<HabitsDbContext>().AddDefaultTokenProviders();
+                });          */
             
             services.AddApiVersioning(config =>
             {

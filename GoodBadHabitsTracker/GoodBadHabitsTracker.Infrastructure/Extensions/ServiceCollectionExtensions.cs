@@ -23,8 +23,11 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
         {       
             services.AddDbContext<HabitsDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("Default")));
-            services.AddScoped<IHabitsRepository, HabitsRepository>();            
-
+            services.AddScoped<IHabitsRepository, HabitsRepository>();
+            services.AddIdentity<ApplicationUser, ApplicationRole>()
+                .AddEntityFrameworkStores<HabitsDbContext>()
+                .AddUserStore<UserStore<ApplicationUser, ApplicationRole, HabitsDbContext, Guid>>()
+                .AddRoleStore<RoleStore<ApplicationRole, HabitsDbContext, Guid>>();
         }
     }
 }

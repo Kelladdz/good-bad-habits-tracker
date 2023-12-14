@@ -1,28 +1,32 @@
 import css from './user.module.css';
 import Logo from '../../assets/logo.svg';
 import User from '../../assets/user.svg';
+import Email from '../../assets/email.svg';
 import Password from '../../assets/password.svg';
 import { Button } from 'react-bootstrap';
 import Link from '../Link';
 import { useState } from 'react';
 import useNavigation from '../../hooks/use-navigation';
 
-
-export default function Register({onRegister}) {
+export default function Register({ onRegister }) {
+	const [name, setName] = useState('');
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
+	const [image, setImage] = useState();
 	const [submitted, setSubmitted] = useState(false);
-	const {navigate} = useNavigation();
+	const { navigate } = useNavigation();
 	const handleSubmit = event => {
-		event.preventDefault();		
+		event.preventDefault();
 		setSubmitted(true);
-		onRegister(email, password);		
+		onRegister(email, name, password, image);
 	};
 
+	const handleChangeName = event => setName(event.target.value);
 	const handleChangeEmail = event => setEmail(event.target.value);
 	const handleChangePassword = event => setPassword(event.target.value);
+	const handleChangeImage = event => setImage(event.target.files[0]);
 
-	if(!submitted){
+	if (!submitted) {
 		return (
 			<div>
 				<div className={css['login-container']}>
@@ -33,17 +37,34 @@ export default function Register({onRegister}) {
 						<form onSubmit={handleSubmit}>
 							<div className={css['input-box']}>
 								<img className={css['user-icon']} src={User}></img>
+								<input
+									className={css['input-field']}
+									value={name}
+									onChange={handleChangeName}
+									placeholder='User Name'
+								/>
+							</div>
+							<div className={css['input-box']}>
+								<img className={css['user-icon']} src={Email}></img>
 								<input className={css['input-field']} value={email} onChange={handleChangeEmail} placeholder='E-mail' />
 							</div>
 							<div className={css['input-box']}>
 								<img className={css['user-icon']} src={Password}></img>
-								<input className={css['input-field']} value={password} onChange={handleChangePassword} type='password' placeholder='Password' />
+								<input
+									className={css['input-field']}
+									value={password}
+									onChange={handleChangePassword}
+									type='password'
+									placeholder='Password'
+								/>
 							</div>
 							<div className={css['input-box']}>
 								<img className={css['user-icon']} src={Password}></img>
 								<input className={css['input-field']} type='password' placeholder='Confirm Password' />
 							</div>
-							<Button className={css['submit-btn']} type='submit' >Register</Button>
+							<Button className={css['submit-btn']} type='submit'>
+								Register
+							</Button>
 							<div className={css['register-btn']}>
 								<Link to='/signin'>Back</Link>
 							</div>
@@ -51,11 +72,11 @@ export default function Register({onRegister}) {
 					</div>
 				</div>
 			</div>
-			);
-		}
-	else return (
-		<div className={css['login-container']}>
-                <p>Look for the verification email in your inbox and click the link within it.</p>
+		);
+	} else
+		return (
+			<div className={css['login-container']}>
+				<p>Look for the verification email in your inbox and click the link within it.</p>
 			</div>
-	)
+		);
 }
