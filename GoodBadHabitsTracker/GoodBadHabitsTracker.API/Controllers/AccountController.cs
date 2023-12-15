@@ -14,11 +14,11 @@ using System.Net;
 namespace GoodBadHabitsTracker.API.Controllers
 {
     [Route("API/[controller]/[action]")]
-    public class UserController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment) : ControllerBase
+    public class AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment) : ControllerBase
     {
         [HttpPost]
         public async Task<IActionResult> Register
-            ([FromBody] ApplicationUserDto request)
+            ([FromBody]ApplicationUserDto request)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -28,9 +28,10 @@ namespace GoodBadHabitsTracker.API.Controllers
                 UserName = request.Name,
             };
             IdentityResult result = await userManager.CreateAsync(user, request.Password!);
+            if (!result.Succeeded) return BadRequest(result.Errors);
             await signInManager.SignInAsync(user, isPersistent: true);
-            /*return RedirectToAction(nameof(HabitsController.GetHabits), "Habits");*/
-            return Ok(result);
+            return RedirectToAction(nameof(HabitsController.GetHabits), "Habits");
+            
         }
 
         [HttpPut("image")]
@@ -58,6 +59,8 @@ namespace GoodBadHabitsTracker.API.Controllers
             }
             return Ok();
         }
+
+        
     }
 
    

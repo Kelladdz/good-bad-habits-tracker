@@ -28,6 +28,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
             {
                 options.User.RequireUniqueEmail = true;
                 options.Password.RequireUppercase = false;
+                options.Password.RequireLowercase = false;
                 options.Password.RequireNonAlphanumeric = false;
             })
                 .AddEntityFrameworkStores<HabitsDbContext>()

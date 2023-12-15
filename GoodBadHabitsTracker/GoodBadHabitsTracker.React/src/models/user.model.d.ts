@@ -1,5 +1,6 @@
 export interface userDto {
-    email: string;
-    password: string;
-    isEmailConfirmed: boolean;
+	name: string;
+	email: string;
+	password: string;
+	image: File;
 }

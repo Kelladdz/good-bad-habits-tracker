@@ -15,7 +15,7 @@ namespace GoodBadHabitsTracker.Core.Domain.IdentityModels
         public ICollection<Habit>? HabitsList { get; set; } = new List<Habit>();
         public string? ImageUrl { get; set; } //google: imageUrl
         public string? DisplayName { get; private set; } //google: name
-
+        public override string? Email { get; set; }
 
     }
 }
