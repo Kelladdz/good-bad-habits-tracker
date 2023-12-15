@@ -40,6 +40,7 @@ namespace GoodBadHabitsTracker.API.Extensions
             
             services.AddApiVersioning(config =>
             {
+                config.ReportApiVersions = true;
                 config.ApiVersionReader = new UrlSegmentApiVersionReader();
             });
 

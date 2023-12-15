@@ -17,8 +17,10 @@ export default function Register({ onRegister, catches }) {
 	const [errors, setErrors] = useState({});
 	const { navigate } = useNavigation();
 
-	const handleSubmit = () => {
-		onRegister(email, name, password, confirmPassword);
+	const handleSubmit = async () => {
+		await onRegister(email, name, password, confirmPassword);
+		if (Object.keys(errors).length === 0) navigate('all-habits');
+		setErrors({});
 	};
 
 	function handleValidation(event) {

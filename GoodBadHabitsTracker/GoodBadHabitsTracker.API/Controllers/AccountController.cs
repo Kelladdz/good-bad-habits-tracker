@@ -30,7 +30,9 @@ namespace GoodBadHabitsTracker.API.Controllers
             IdentityResult result = await userManager.CreateAsync(user, request.Password!);
             if (!result.Succeeded) return BadRequest(result.Errors);
             await signInManager.SignInAsync(user, isPersistent: true);
-            return RedirectToAction(nameof(HabitsController.GetHabits), "Habits");
+            
+
+            return new CreatedAtRouteResult("GetUserById", new {userId = user.Id}, user);
             
         }
 

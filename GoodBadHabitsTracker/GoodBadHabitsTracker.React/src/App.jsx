@@ -33,6 +33,7 @@ function App() {
 				console.log(errorData);
 				setErrors(errorData);
 			});
+			
 	};
 
 	// const login = async (email, password) => {
