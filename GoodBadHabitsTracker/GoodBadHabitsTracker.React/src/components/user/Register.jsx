@@ -19,7 +19,7 @@ export default function Register({ onRegister, catches }) {
 
 	const handleSubmit = async () => {
 		await onRegister(email, name, password, confirmPassword);
-		if (Object.keys(errors).length === 0) navigate('all-habits');
+		// if (Object.keys(errors).length === 0) navigate('/login');
 		setErrors({});
 	};
 

@@ -1,4 +1,5 @@
 ﻿using GoodBadHabitsTracker.API.Controllers.v1;
+using GoodBadHabitsTracker.API.Services.EmailSender;
 using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.DTOs;
 using GoodBadHabitsTracker.Core.Services.UserService;
@@ -14,7 +15,7 @@ using System.Net;
 namespace GoodBadHabitsTracker.API.Controllers
 {
     [Route("API/[controller]/[action]")]
-    public class AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment) : ControllerBase
+    public class AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender) : ControllerBase
     {
         [HttpPost]
         public async Task<IActionResult> Register
@@ -30,10 +31,9 @@ namespace GoodBadHabitsTracker.API.Controllers
             IdentityResult result = await userManager.CreateAsync(user, request.Password!);
             if (!result.Succeeded) return BadRequest(result.Errors);
             await signInManager.SignInAsync(user, isPersistent: true);
-            
 
+            emailSender.SendWelcomeMessageAsync(user, user.Email);
             return new CreatedAtRouteResult("GetUserById", new {userId = user.Id}, user);
-            
         }
 
         [HttpPut("image")]

@@ -19,7 +19,7 @@ namespace GoodBadHabitsTracker.API.Extensions
         public static void AddUi(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<MailSettings>(configuration.GetSection("MailSettings"));
-            services.AddTransient<IEmailSender<ApplicationUser>, EmailSender>();
+            services.AddTransient<ICustomEmailSender<ApplicationUser>, CustomEmailSender>();
             services.AddControllers().AddNewtonsoftJson(options =>
             {
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;

@@ -13,8 +13,7 @@ import { gapi } from 'gapi-script';
 function App() {
 	const [errors, setErrors] = useState({});
 	const { navigate } = useNavigation();
-	// const [emailConfirmation, setEmailConfirmation] = useState(false);
-	// const clientId = '238617088969-sbq9rl49dhr623f55j6ae2c5g32r6sqk.apps.googleusercontent.com';
+	const clientId = '238617088969-sbq9rl49dhr623f55j6ae2c5g32r6sqk.apps.googleusercontent.com';
 	const register = async (email, name, password, confirmPassword) => {
 		const response = await axios
 			.post('https://localhost:7154/API/Account/Register', {
@@ -33,51 +32,52 @@ function App() {
 				console.log(errorData);
 				setErrors(errorData);
 			});
-			
 	};
 
-	// const login = async (email, password) => {
-	// 	const response = await axios.post('https://localhost:7154/login', {
-	// 		email,
-	// 		password,
-	// 	});
-	// 	const accessToken = response.data.tokenType + ' ' + response.data.accessToken;
-	// 	console.log(response.data);
-	// 	console.log(accessToken);
-	// 	const iscConfirmResponse = await axios.get('https://localhost:7154/manage/info', {
-	// 		headers: {
-	// 			accept: 'application/json',
-	// 			Authorization: accessToken,
-	// 		},
-	// 	});
-	// 	setEmailConfirmation(iscConfirmResponse.data.isEmailConfirmed);
-	// 	console.log(iscConfirmResponse.data.isEmailConfirmed);
-	// 	emailConfirmation ? navigate('/confirm') : navigate('/all-habits');
-	// };
+	const login = async (email, password) => {
+		const response = await axios.post('https://localhost:7154/login', {
+			email,
+			password,
+		});
+		const accessToken = response.data.tokenType + ' ' + response.data.accessToken;
+		console.log(response.data);
+		console.log(accessToken);
+		const iscConfirmResponse = await axios.get('https://localhost:7154/manage/info', {
+			headers: {
+				accept: 'application/json',
+				Authorization: accessToken,
+			},
+		});
+		setEmailConfirmation(iscConfirmResponse.data.isEmailConfirmed);
+		console.log(iscConfirmResponse.data.isEmailConfirmed);
+		emailConfirmation ? navigate('/confirm') : navigate('/all-habits');
+	};
 
-	// const googleLogin = async res => {
-	// 	const email = res.profileObj.email;
-	// 	const password = '';
-	// 	const response = await axios.post('https://localhost:7154/register', {
-	// 		email,
-	// 		password,
-	// 	});
-	// 	console.log(res.data);
-	// };
+	const googleLogin = async res => {
+		const email = res.profileObj.email;
+		const password = '';
+		const response = await axios.post('https://localhost:7154/register', {
+			email,
+			password,
+		});
+		console.log(res.data);
+	};
 
-	// useEffect(() => {
-	// 	function start() {
-	// 		gapi.client.init({
-	// 			clientId: clientId,
-	// 			scope: 'email',
-	// 		});
-	// 	}
-	// 	gapi.load('client:auth2', start);
-	// });
+	useEffect(() => {
+		function start() {
+			gapi.client.init({
+				clientId: clientId,
+				scope: 'email',
+			});
+		}
+		gapi.load('client:auth2', start);
+	});
 
 	return (
 		<>
-			<Route path='/signin'>{/* <LoginPage onLogin={login} onGoogleLogin={googleLogin} /> */}</Route>
+			<Route path='/signin'>
+				<LoginPage onLogin={login} onGoogleLogin={googleLogin} />
+			</Route>
 			<Route path='/signup'>
 				<RegisterPage onRegister={register} errors={errors} />
 			</Route>
