@@ -20,7 +20,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         /// </summary>
         /// <returns></returns>
         [HttpGet("habits")]
-        [Authorize]
+        
         public async Task<IActionResult> GetHabits(string? term, DateOnly date, int page = 1, int limit = 10)
         {
             var userId = userAccessor.GetLoggedUserId();

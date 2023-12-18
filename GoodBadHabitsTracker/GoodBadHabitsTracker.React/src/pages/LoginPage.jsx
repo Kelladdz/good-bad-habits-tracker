@@ -1,9 +1,9 @@
 import Login from '../components/user/Login';
 
-export default function LoginPage({onLogin, onGoogleLogin}) {
+export default function LoginPage({ onLogin }) {
 	return (
 		<div>
-			<Login onLogin={onLogin} onGoogleLogin={onGoogleLogin}/>
+			<Login onLogin={onLogin} />
 		</div>
 	);
 }

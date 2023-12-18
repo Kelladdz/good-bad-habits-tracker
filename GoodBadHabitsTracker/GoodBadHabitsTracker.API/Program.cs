@@ -10,6 +10,7 @@ using Swashbuckle.AspNetCore.Filters;
 using Newtonsoft.Json;
 using Asp.Versioning;
 using GoodBadHabitsTracker.API.Extensions;
+using Org.BouncyCastle.Crypto.Signers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +21,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        builder.WithOrigins("https://localhost:5173").AllowCredentials().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders("Set-Cookie");
     });
 });
 var app = builder.Build();
@@ -31,8 +32,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-
+/*app.UseCookiePolicy(
+    new CookiePolicyOptions
+    {
+        Secure = CookieSecurePolicy.Always
+    });*/
 app.UseHsts();
 app.UseHttpsRedirection();
 

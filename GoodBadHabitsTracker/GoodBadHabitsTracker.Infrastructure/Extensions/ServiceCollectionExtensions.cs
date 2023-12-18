@@ -3,6 +3,7 @@ using GoodBadHabitsTracker.Core.Domain.Interfaces;
 using GoodBadHabitsTracker.Infrastructure.Persistance;
 using GoodBadHabitsTracker.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +35,20 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                 .AddEntityFrameworkStores<HabitsDbContext>()
                 .AddUserStore<UserStore<ApplicationUser, ApplicationRole, HabitsDbContext, Guid>>()
                 .AddRoleStore<RoleStore<ApplicationRole, HabitsDbContext, Guid>>();
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+                {
+                    options.Cookie.Name = "UserLoginCookie";
+                    options.SlidingExpiration = true;
+                    options.ExpireTimeSpan = new TimeSpan(2, 0, 0);
+                    options.Events.OnRedirectToLogin = (context) =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        return Task.CompletedTask;
+                    };
+                    options.Cookie.HttpOnly = false;
+                    /*options.Cookie.SameSite = SameSiteMode.Lax;*/
+                });
         }
     }
 }

@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 import { GoogleLogin } from 'react-google-login';
 import { gapi } from 'gapi-script';
 
-export default function Login({ onLogin, onGoogleLogin }) {
+export default function Login({ onLogin }) {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 
@@ -64,13 +64,13 @@ export default function Login({ onLogin, onGoogleLogin }) {
 					</div>
 					<div className={css['icons']}>
 						<div id='signInButton'>
-							<GoogleLogin
+							{/* <GoogleLogin
 								clientId={clientId}
 								onSuccess={onGoogleLogin}
 								onFailure={onFailure}
 								cookiePolicy={'single_host_origin'}
 								isSignedIn={true}
-							/>
+							/> */}
 							<img className={css['external-icon']} src={Google} />
 						</div>
 						<a className={css['external-link']} style={{ paddingLeft: '3rem' }} href='#'>

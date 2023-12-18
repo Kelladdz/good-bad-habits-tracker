@@ -6,7 +6,7 @@ import Password from '../../assets/password.svg';
 import { Button } from 'react-bootstrap';
 import Link from '../Link';
 import { useEffect, useState } from 'react';
-import useNavigation from '../../hooks/use-navigation';
+import useNavigation from '../../hooks/useNavigation';
 import Validation from '../../utilities/Validation';
 
 export default function Register({ onRegister, catches }) {
@@ -19,7 +19,7 @@ export default function Register({ onRegister, catches }) {
 
 	const handleSubmit = async () => {
 		await onRegister(email, name, password, confirmPassword);
-		// if (Object.keys(errors).length === 0) navigate('/login');
+		if (Object.keys(errors).length === 0) navigate('/signin');
 		setErrors({});
 	};
 

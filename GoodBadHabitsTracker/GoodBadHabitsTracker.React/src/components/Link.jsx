@@ -1,4 +1,4 @@
-import useNavigation from '../hooks/use-navigation';
+import useNavigation from '../hooks/useNavigation';
 
 export default function Link({ to, children }) {
 	const { navigate } = useNavigation();

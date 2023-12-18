@@ -6,5 +6,6 @@ namespace GoodBadHabitsTracker.API.Controllers
     [Route("API/v{version:apiVersion}")]
     public class CustomControllerBase : ControllerBase
     {
+        
     }
 }
