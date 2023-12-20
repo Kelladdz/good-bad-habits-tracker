@@ -42,19 +42,24 @@ namespace GoodBadHabitsTracker.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Login
             ([FromBody] LoginDto request)
-        {
+        {            
             var user = await userManager.FindByEmailAsync(request.Email);
             var userName = user.UserName;
             signInManager.AuthenticationScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             var result = await signInManager.PasswordSignInAsync(userName, request.Password, isPersistent: true, lockoutOnFailure: false);
 
-            var generatedCookies = HttpContext.Response.Headers.SetCookie.ToString();
+            /*var generatedCookies = HttpContext.Response.Headers.SetCookie.ToString();
             int startOfCookie = generatedCookies.IndexOf("=") + 1;
             int endOfCookie = generatedCookies.IndexOf(";");
             int length = endOfCookie - startOfCookie;
-            var cookies = generatedCookies.Substring(startOfCookie, length);
+            var cookies = generatedCookies.Substring(startOfCookie, length);*/
 
-            return result.Succeeded ? new OkObjectResult(cookies) : new UnauthorizedResult();
+            if (!result.Succeeded)
+            {
+                return new UnauthorizedResult();                
+            }
+            HttpContext.Response.Cookies.Append("Logged", "true");
+            return new OkResult();
 
             /*            if (cookie == null)
                         {            

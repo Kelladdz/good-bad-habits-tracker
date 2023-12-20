@@ -46,20 +46,9 @@ function App() {
 				},
 				{ withCredentials: true }
 			)
-			.then(navigate('/all-habits'));
+			.then(navigate('/'));
 		console.log(response.data);
 		Cookies.set('UserLoginCookie', response.data);
-
-		// if (response.status === 200) navigate('/all-habits');
-		// const iscConfirmResponse = await axios.get('https://localhost:7154/manage/info', {
-		// 	headers: {
-		// 		accept: 'application/json',
-		// 		Authorization: accessToken,
-		// 	},
-		// });
-		// setEmailConfirmation(iscConfirmResponse.data.isEmailConfirmed);
-		// console.log(iscConfirmResponse.data.isEmailConfirmed);
-		// emailConfirmation ? navigate('/confirm') : navigate('/all-habits');
 	};
 
 	// const googleLogin = async res => {
@@ -71,6 +60,20 @@ function App() {
 	// 	});
 	// 	console.log(res.data);
 	// };
+
+	const logout = async () => {
+		const response = await axios.post('https://localhost:7154/API/Account/Logout')
+		.then(navigate('/signin'));
+	}
+
+	useEffect(() => {
+		const userCookie = () => {
+			return Cookies.get('Logged');
+		};
+		if (userCookie() === undefined) {
+			navigate('/signin');
+		} else navigate('/all-habits');
+	});
 
 	return (
 		<>
@@ -86,7 +89,7 @@ function App() {
 				<RegisterPage onRegister={register} errors={errors} />
 			</Route>
 			<Route path='/all-habits'>
-				<MainContentPage />
+				<MainContentPage onLogout={logout}/>
 			</Route>
 		</>
 	);

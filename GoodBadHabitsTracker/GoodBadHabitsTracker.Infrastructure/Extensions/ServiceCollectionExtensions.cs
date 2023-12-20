@@ -46,8 +46,8 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         return Task.CompletedTask;
                     };
-                    options.Cookie.HttpOnly = false;
-                    /*options.Cookie.SameSite = SameSiteMode.Lax;*/
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SameSite = SameSiteMode.Lax;
                 });
         }
     }
