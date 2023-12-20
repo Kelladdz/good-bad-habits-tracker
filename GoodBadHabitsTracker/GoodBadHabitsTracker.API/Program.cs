@@ -37,6 +37,7 @@ if (app.Environment.IsDevelopment())
     {
         Secure = CookieSecurePolicy.Always
     });*/
+
 app.UseHsts();
 app.UseHttpsRedirection();
 

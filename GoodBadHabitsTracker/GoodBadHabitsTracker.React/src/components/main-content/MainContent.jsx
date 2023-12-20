@@ -3,14 +3,14 @@ import { useEffect } from 'react';
 import { Button } from 'react-bootstrap';
 import useNavigation from '../../hooks/useNavigation';
 
-export default function MainContent({onLogout}) {
-    const {navigate} = useNavigation();
+export default function MainContent({ onLogout }) {
+	const { navigate } = useNavigation();
 
-    logout = async () => {
-        onLogout();
-    }
+	const logout = async () => {
+		onLogout();
+	};
 
-    useEffect(() => {
+	useEffect(() => {
 		const userCookie = () => {
 			return Cookies.get('Logged');
 		};
@@ -19,11 +19,9 @@ export default function MainContent({onLogout}) {
 		} else navigate('/all-habits');
 	});
 
-    return (
-        <>
-            <Button onClick={logout}>
-                Logout
-            </Button>
-        </>
-    );
+	return (
+		<>
+			<Button onClick={logout}>Logout</Button>
+		</>
+	);
 }

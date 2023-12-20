@@ -19,7 +19,7 @@ using System.Security.Claims;
 namespace GoodBadHabitsTracker.API.Controllers
 {
     [Route("API/[controller]/[action]")]
-    public class AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender) : ControllerBase
+    public class AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender, IHttpContextAccessor httpContextAccessor) : ControllerBase
     {
         [HttpPost]
         public async Task<IActionResult> Register
@@ -42,44 +42,26 @@ namespace GoodBadHabitsTracker.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Login
             ([FromBody] LoginDto request)
-        {            
+        {
             var user = await userManager.FindByEmailAsync(request.Email);
             var userName = user.UserName;
             signInManager.AuthenticationScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             var result = await signInManager.PasswordSignInAsync(userName, request.Password, isPersistent: true, lockoutOnFailure: false);
 
-            /*var generatedCookies = HttpContext.Response.Headers.SetCookie.ToString();
-            int startOfCookie = generatedCookies.IndexOf("=") + 1;
-            int endOfCookie = generatedCookies.IndexOf(";");
-            int length = endOfCookie - startOfCookie;
-            var cookies = generatedCookies.Substring(startOfCookie, length);*/
+            if (!result.Succeeded) return new UnauthorizedResult();
 
-            if (!result.Succeeded)
-            {
-                return new UnauthorizedResult();                
-            }
-            HttpContext.Response.Cookies.Append("Logged", "true");
+            Response.Cookies.Append("Logged", "true");
+
             return new OkResult();
-
-            /*            if (cookie == null)
-                        {            
-
-                        }*/
-            /*
-                        await HttpContext.SignInAsync("Cookies", new ClaimsPrincipal(
-                            new ClaimsIdentity(
-                                new Claim[]
-                                {
-                                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                                }, "Cookies")
-                            ));
-                        return Ok();*/
         }
 
-        /*public async Task<IActionResult> IsSignedIn()
+        [HttpGet]
+        public async Task<IActionResult> Logout()
         {
-
-        }*/
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            Response.Cookies.Delete("Logged");
+            return new OkResult();
+        }
 
         [HttpPut("image")]
         public async Task<IActionResult> UploadImage([FromForm]IFormFile image, string userName)

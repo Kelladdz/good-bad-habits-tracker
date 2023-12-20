@@ -14,7 +14,6 @@ import Cookies from 'js-cookie';
 function App() {
 	const [errors, setErrors] = useState({});
 	const { navigate } = useNavigation();
-	const [accessToken, setAccessToken] = useState();
 	// const clientId = '238617088969-sbq9rl49dhr623f55j6ae2c5g32r6sqk.apps.googleusercontent.com';
 	const register = async (email, name, password, confirmPassword) => {
 		const response = await axios
@@ -46,9 +45,10 @@ function App() {
 				},
 				{ withCredentials: true }
 			)
-			.then(navigate('/'));
+			.then(res => {
+				if (res.status === 200) navigate('/all-habits');
+			});
 		console.log(response.data);
-		Cookies.set('UserLoginCookie', response.data);
 	};
 
 	// const googleLogin = async res => {
@@ -62,9 +62,10 @@ function App() {
 	// };
 
 	const logout = async () => {
-		const response = await axios.post('https://localhost:7154/API/Account/Logout')
-		.then(navigate('/signin'));
-	}
+		const response = await axios
+			.get('https://localhost:7154/API/Account/Logout', { withCredentials: true })
+			.then(navigate('/'));
+	};
 
 	useEffect(() => {
 		const userCookie = () => {
@@ -78,7 +79,7 @@ function App() {
 	return (
 		<>
 			<Route path='/'>
-				<Home accessToken={accessToken} />
+				<Home />
 			</Route>
 			<Route path='/signin'>
 				{/* <LoginPage onLogin={login} 
@@ -89,7 +90,7 @@ function App() {
 				<RegisterPage onRegister={register} errors={errors} />
 			</Route>
 			<Route path='/all-habits'>
-				<MainContentPage onLogout={logout}/>
+				<MainContentPage onLogout={logout} />
 			</Route>
 		</>
 	);
