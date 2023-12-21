@@ -7,8 +7,9 @@ export default function Link({ to, children }) {
 		event.preventDefault();
 		navigate(to);
 	};
+
 	return (
-		<a href='#' onClick={handleClick}>
+		<a href={to} onClick={handleClick}>
 			{children}
 		</a>
 	);

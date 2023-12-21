@@ -15,6 +15,7 @@ export default function Register({ onRegister, catches }) {
 	const [password, setPassword] = useState('');
 	const [confirmPassword, setConfirmPassword] = useState('');
 	const [errors, setErrors] = useState({});
+	const [loginErrors, setLoginErrors] = useState("");
 	const { navigate } = useNavigation();
 
 	const handleSubmit = async () => {
@@ -30,15 +31,6 @@ export default function Register({ onRegister, catches }) {
 		if (Object.keys(errors).length === 0) handleSubmit();
 	}
 
-	let emailIsTakenInfo = null;
-	if (catches.email !== null) {
-		emailIsTakenInfo = <p style={{ color: 'red', marginBottom: '0px' }}>{catches.email}</p>;
-	}
-	let nameIsTakenInfo = null;
-	if (catches.name !== null) {
-		nameIsTakenInfo = <p style={{ color: 'red', marginBottom: '0px' }}>{catches.name}</p>;
-	}
-
 	const handleChangeName = event => setName(event.target.value);
 	const handleChangeEmail = event => setEmail(event.target.value);
 	const handleChangePassword = event => setPassword(event.target.value);
@@ -46,6 +38,7 @@ export default function Register({ onRegister, catches }) {
 
 	useEffect(() => {
 		setErrors({ ...errors, [catches.name]: catches.value });
+		setLoginErrors("");
 	}, []);
 
 	return (
@@ -61,13 +54,13 @@ export default function Register({ onRegister, catches }) {
 							<input className={css['input-field']} value={name} onChange={handleChangeName} placeholder='User Name' />
 						</div>
 						{errors.name && <p style={{ color: 'red', marginBottom: '0px' }}>{errors.name}</p>}
-						{nameIsTakenInfo}
+
 						<div className={css['input-box']}>
 							<img className={css['user-icon']} src={Email}></img>
 							<input className={css['input-field']} value={email} onChange={handleChangeEmail} placeholder='E-mail' />
 						</div>
 						{errors.email && <p style={{ color: 'red', marginBottom: '0px' }}>{errors.email}</p>}
-						{emailIsTakenInfo}
+
 						<div className={css['input-box']}>
 							<img className={css['user-icon']} src={Password}></img>
 							<input

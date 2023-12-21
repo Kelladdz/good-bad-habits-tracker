@@ -8,12 +8,13 @@ import './App.css';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import useNavigation from './hooks/useNavigation';
-import { gapi } from 'gapi-script';
-import Cookies from 'js-cookie';
 
 function App() {
 	const [errors, setErrors] = useState({});
+	const [loginErrors, setLoginErrors] = useState('');
 	const { navigate } = useNavigation();
+
+
 	// const clientId = '238617088969-sbq9rl49dhr623f55j6ae2c5g32r6sqk.apps.googleusercontent.com';
 	const register = async (email, name, password, confirmPassword) => {
 		const response = await axios
@@ -25,7 +26,7 @@ function App() {
 			})
 			.catch(errs => {
 				console.log(errs.response.data);
-				const errorData = {};
+				let errorData = {};
 				for (let err of errs.response.data) {
 					if (err.code === 'DuplicateUserName') errorData.name = `Username ${name} is already taken.`;
 					else if (err.code === 'DuplicateEmail') errorData.email = `Email ${email} is already taken.`;
@@ -46,9 +47,14 @@ function App() {
 				{ withCredentials: true }
 			)
 			.then(res => {
-				if (res.status === 200) navigate('/all-habits');
+				if (res.response.status === 200) navigate('/all-habits');
+			})
+			.catch(errs => {
+				console.log(errs.response);
+				let errorData = '';
+				if (errs.response.status === 401) errorData = 'Invalid email or password';
+				setLoginErrors(errorData);
 			});
-		console.log(response.data);
 	};
 
 	// const googleLogin = async res => {
@@ -68,13 +74,10 @@ function App() {
 	};
 
 	useEffect(() => {
-		const userCookie = () => {
-			return Cookies.get('Logged');
-		};
-		if (userCookie() === undefined) {
-			navigate('/signin');
-		} else navigate('/all-habits');
-	});
+		setErrors({});
+		setLoginErrors('');
+		console.log(errors, loginErrors);
+	},[]);
 
 	return (
 		<>
@@ -84,7 +87,7 @@ function App() {
 			<Route path='/signin'>
 				{/* <LoginPage onLogin={login} 
 				onGoogleLogin={googleLogin} /> */}
-				<LoginPage onLogin={login} />
+				<LoginPage onLogin={login} loginErrors={loginErrors} />
 			</Route>
 			<Route path='/signup'>
 				<RegisterPage onRegister={register} errors={errors} />

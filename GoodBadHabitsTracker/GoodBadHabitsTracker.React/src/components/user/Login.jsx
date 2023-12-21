@@ -6,26 +6,36 @@ import Google from '../../assets/google.svg';
 import Facebook from '../../assets/facebook.svg';
 import { Button } from 'react-bootstrap';
 import Link from '../Link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { GoogleLogin } from 'react-google-login';
 import { gapi } from 'gapi-script';
+import useNavigation from '../../hooks/useNavigation';
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, loginErrors }) {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
+	const [errors, setErrors] = useState('');
+	const navigate = useNavigation();
 
-	const clientId = '238617088969-sbq9rl49dhr623f55j6ae2c5g32r6sqk.apps.googleusercontent.com';
+	// const clientId = '238617088969-sbq9rl49dhr623f55j6ae2c5g32r6sqk.apps.googleusercontent.com';
 
 	const handleSubmit = event => {
 		event.preventDefault();
 		onLogin(email, password);
 	};
 
+	useEffect(() => {
+		console.log(loginErrors);
+		return setErrors(loginErrors);
+	}, [loginErrors]);
+
+	useEffect(() => {
+		console.log(loginErrors);
+		return setErrors('');
+	}, [navigate]);
+
 	const handleChangeEmail = event => setEmail(event.target.value);
 	const handleChangePassword = event => setPassword(event.target.value);
-
-	const onSuccess = res => console.log('Success!', res.profileObj);
-	const onFailure = res => console.log('Fail!', res);
 
 	return (
 		<div>
@@ -49,6 +59,7 @@ export default function Login({ onLogin }) {
 								placeholder='Password'
 							/>
 						</div>
+						{errors && <p style={{ color: 'red', marginBottom: '0px' }}>{errors}</p>}
 						<Button className={css['submit-btn']} type='submit'>
 							Login
 						</Button>
