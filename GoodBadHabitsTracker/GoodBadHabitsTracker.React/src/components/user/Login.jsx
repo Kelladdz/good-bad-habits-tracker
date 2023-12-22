@@ -29,11 +29,6 @@ export default function Login({ onLogin, loginErrors }) {
 		return setErrors(loginErrors);
 	}, [loginErrors]);
 
-	useEffect(() => {
-		console.log(loginErrors);
-		return setErrors('');
-	}, [navigate]);
-
 	const handleChangeEmail = event => setEmail(event.target.value);
 	const handleChangePassword = event => setPassword(event.target.value);
 

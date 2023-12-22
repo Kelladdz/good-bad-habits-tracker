@@ -77,7 +77,7 @@ function App() {
 		setErrors({});
 		setLoginErrors('');
 		console.log(errors, loginErrors);
-	},[]);
+	},[navigate]);
 
 	return (
 		<>
