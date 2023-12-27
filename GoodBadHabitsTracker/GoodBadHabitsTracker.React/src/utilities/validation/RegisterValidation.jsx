@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-export default function Validation(name, email, password, confirmPassword) {
+export default function RegisterValidation(name, email, password, confirmPassword) {
 	let errors = {};
 	const emailPattern = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
 	const passwordPattern = /^([a-zA-Z0-9_@#$%^&*()<>?/\|}{~:.,;\-]+){6,}$/;

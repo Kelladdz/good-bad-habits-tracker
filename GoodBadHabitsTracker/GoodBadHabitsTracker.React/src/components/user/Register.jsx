@@ -7,7 +7,7 @@ import { Button } from 'react-bootstrap';
 import Link from '../Link';
 import { useEffect, useState } from 'react';
 import useNavigation from '../../hooks/useNavigation';
-import Validation from '../../utilities/Validation';
+import RegisterValidation from '../../utilities/validation/RegisterValidation';
 import axios from 'axios';
 
 export default function Register() {
@@ -54,13 +54,19 @@ export default function Register() {
 
 	const handleSubmit = event => {
 		event.preventDefault();
-		setErrors(Validation(name, email, password, confirmPassword));
+		setErrors(RegisterValidation(name, email, password, confirmPassword));
 		setTimeout(() => {
-			if (Object.keys(errors).length === 0 || (typeof errors.name === 'undefined' && email.length !== 0 && name.length !== 0 && password.length !== 0 && confirmPassword.length !== 0))
+			if (
+				Object.keys(errors).length === 0 ||
+				(typeof errors.name === 'undefined' &&
+					email.length !== 0 &&
+					name.length !== 0 &&
+					password.length !== 0 &&
+					confirmPassword.length !== 0)
+			)
 				register(email, name, password, confirmPassword);
 		}, 500);
 	};
-	
 
 	const handleChangeName = event => setName(event.target.value);
 	const handleChangeEmail = event => setEmail(event.target.value);
@@ -68,11 +74,11 @@ export default function Register() {
 	const handleChangeConfirmPassword = event => setConfirmPassword(event.target.value);
 
 	useEffect(() => {
-		return setErrors({ ...errors, [errors.name]: errors.value });
+		return setErrors({});
 	}, [navigate]);
 
 	useEffect(() => {
-		return setServerErrors('')
+		return setServerErrors('');
 	}, [errors]);
 
 	return (

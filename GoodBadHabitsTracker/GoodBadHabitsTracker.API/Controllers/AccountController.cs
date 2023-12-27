@@ -68,6 +68,7 @@ namespace GoodBadHabitsTracker.API.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> ForgetPassword([FromBody]ForgetPasswordDto request)
         {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
             var user = await userManager.FindByEmailAsync(request.Email);
             if (user == null) return new NotFoundResult();
             var token = await userManager.GeneratePasswordResetTokenAsync(user);

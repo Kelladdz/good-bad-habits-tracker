@@ -1,9 +1,9 @@
 import ForgetPassword from '../components/user/ForgetPassword';
 
-export default function ForgetPasswordPage({ onPasswordForget, forgetPasswordErrors }) {
+export default function ForgetPasswordPage() {
 	return (
 		<div>
-			<ForgetPassword onPasswordForget={onPasswordForget} forgetPasswordErrors={forgetPasswordErrors}/>
+			<ForgetPassword/>
 		</div>
 	);
 }

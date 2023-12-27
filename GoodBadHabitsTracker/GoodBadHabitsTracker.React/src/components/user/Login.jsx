@@ -7,17 +7,17 @@ import Facebook from '../../assets/facebook.svg';
 import { Button } from 'react-bootstrap';
 import Link from '../Link';
 import { useState, useEffect, useContext } from 'react';
-import { GoogleLogin } from 'react-google-login';
+import { GoogleLogin, onFailure } from 'react-google-login';
 import { gapi } from 'gapi-script';
 import useNavigation from '../../hooks/useNavigation';
 
-export default function Login() {
+export default function Login({onGoogleLogin}) {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [loginErrors, setLoginErrors] = useState('');
 	const {navigate} = useNavigation();
 
-	// const clientId = '238617088969-sbq9rl49dhr623f55j6ae2c5g32r6sqk.apps.googleusercontent.com';
+	const clientId = '238617088969-sbq9rl49dhr623f55j6ae2c5g32r6sqk.apps.googleusercontent.com';
 
 	const login = async (email, password) => {
 		let errorData = '';
@@ -100,13 +100,13 @@ export default function Login() {
 					</div>
 					<div className={css['icons']}>
 						<div id='signInButton' className={css['sign-in-btn']}>
-							{/* <GoogleLogin
+							<GoogleLogin
 								clientId={clientId}
 								onSuccess={onGoogleLogin}
 								onFailure={onFailure}
 								cookiePolicy={'single_host_origin'}
 								isSignedIn={true}
-							/> */}
+							/>
 							<img className={css['external-icon']} src={Google} />
 						</div>
 						<div id='signInButton' className={css['sign-in-btn']}>

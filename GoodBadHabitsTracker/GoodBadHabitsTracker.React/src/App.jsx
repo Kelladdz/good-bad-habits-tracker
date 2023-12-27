@@ -14,46 +14,21 @@ import ResetPassword from './components/user/ResetPassword';
 
 function App() {
 	const [registerErrors, setRegisterErrors] = useState({});
-	const [registerServerErrors, setRegisterServerErrors] = useState('');
 	const [loginErrors, setLoginErrors] = useState('');
 	const [forgetPasswordErrors, setForgetPasswordErrors] = useState('');
 
 	const { navigate } = useNavigation();
 
-	// const clientId = '238617088969-sbq9rl49dhr623f55j6ae2c5g32r6sqk.apps.googleusercontent.com';
+	const clientId = '238617088969-sbq9rl49dhr623f55j6ae2c5g32r6sqk.apps.googleusercontent.com';
 
-	// const googleLogin = async res => {
-	// 	const email = res.profileObj.email;
-	// 	const password = '';
-	// 	const response = await axios.post('https://localhost:7154/register', {
-	// 		email,
-	// 		password,
-	// 	});
-	// 	console.log(res.data);
-	// };
-
-	const sendLinkForResetPassword = async email => {
-		const response = await axios
-			.post('https://localhost:7154/API/Account/ForgetPassword', {
-				email,
-			})
-			.then(res => {
-				console.log(res.data);
-			})
-			.catch(errs => {
-				console.log(errs);
-				let errorData = '';
-				if (errs.response.status === 404) errorData = `This account doesn't exist`;
-				setForgetPasswordErrors(errorData);
-			});
-	};
-
-	const resetPassword = async (password, token, userId) => {
-		const response = await axios.put('https://localhost:7154/API/Account/ResetPassword', {
+	const googleLogin = async res => {
+		const email = res.profileObj.email;
+		const password = '';
+		const response = await axios.post('https://localhost:7154/register', {
+			email,
 			password,
-			token,
-			userId,
 		});
+		console.log(res.data);
 	};
 
 	const logout = async () => {
@@ -63,34 +38,27 @@ function App() {
 		navigate('/signin');
 	};
 
-	useEffect(() => {
-		setRegisterErrors({});
-		setLoginErrors('');
-		setForgetPasswordErrors('');
-		console.log(registerErrors, loginErrors, forgetPasswordErrors);
-	}, [navigate]);
-
 	return (
 		<>
 			<Route path='/'>
 				<Home />
 			</Route>
 			<Route path='/signin'>
-				{/* <LoginPage onLogin={login} 
-				onGoogleLogin={googleLogin} /> */}
+				<LoginPage 
+				onGoogleLogin={googleLogin} />
 				<LoginPage />
 			</Route>
 			<Route path='/signup'>
-				<RegisterPage/>
+				<RegisterPage />
 			</Route>
 			<Route path='/all-habits'>
 				<MainContentPage onLogout={logout} />
 			</Route>
 			<Route path='/forget-password'>
-				<ForgetPasswordPage onPasswordForget={sendLinkForResetPassword} forgetPasswordErrors={forgetPasswordErrors} />
+				<ForgetPasswordPage />
 			</Route>
 			<Route path='/reset-password'>
-				<ResetPasswordPage onResetPassword={resetPassword} />
+				<ResetPasswordPage />
 			</Route>
 		</>
 	);
