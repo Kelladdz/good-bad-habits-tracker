@@ -5,6 +5,7 @@ using GoodBadHabitsTracker.Core.DTOs;
 using GoodBadHabitsTracker.Core.Services.UserService;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -63,6 +64,28 @@ namespace GoodBadHabitsTracker.API.Controllers
             return new OkResult();
         }
 
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgetPassword([FromBody]ForgetPasswordDto request)
+        {
+            var user = await userManager.FindByEmailAsync(request.Email);
+            if (user == null) return new NotFoundResult();
+            var token = await userManager.GeneratePasswordResetTokenAsync(user);
+            var link = Url.Action("ResetPassword", "Account", new { token, email = user.Email }, Request.Scheme)!;
+            await emailSender.SendPasswordResetLinkAsync(user, user.Email, link, token);
+            return new OkResult();
+        }
+
+        [HttpPut]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword([FromBody]ResetPasswordDto request)
+        {
+            var user = await userManager.FindByIdAsync(request.UserId);
+            if (user == null) return new BadRequestResult();
+            IdentityResult result = await userManager.ResetPasswordAsync(user, request.Token, request.Password);
+            if (!result.Succeeded) return new UnauthorizedResult();
+            return new OkResult();
+        }
         [HttpPut("image")]
         public async Task<IActionResult> UploadImage([FromForm]IFormFile image, string userName)
         {

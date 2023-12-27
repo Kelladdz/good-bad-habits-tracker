@@ -33,6 +33,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                 options.Password.RequireNonAlphanumeric = false;
             })
                 .AddEntityFrameworkStores<HabitsDbContext>()
+                .AddTokenProvider<DataProtectorTokenProvider<ApplicationUser>>(TokenOptions.DefaultProvider)
                 .AddUserStore<UserStore<ApplicationUser, ApplicationRole, HabitsDbContext, Guid>>()
                 .AddRoleStore<RoleStore<ApplicationRole, HabitsDbContext, Guid>>();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

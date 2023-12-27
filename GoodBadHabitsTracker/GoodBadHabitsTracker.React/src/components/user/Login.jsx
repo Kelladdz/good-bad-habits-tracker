@@ -11,22 +11,45 @@ import { GoogleLogin } from 'react-google-login';
 import { gapi } from 'gapi-script';
 import useNavigation from '../../hooks/useNavigation';
 
-export default function Login({ onLogin, loginErrors }) {
+export default function Login() {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
-	const [errors, setErrors] = useState('');
-	const navigate = useNavigation();
+	const [loginErrors, setLoginErrors] = useState('');
+	const {navigate} = useNavigation();
 
 	// const clientId = '238617088969-sbq9rl49dhr623f55j6ae2c5g32r6sqk.apps.googleusercontent.com';
 
+	const login = async (email, password) => {
+		let errorData = '';
+		const response = await axios
+			.post(
+				'https://localhost:7154/API/Account/Login',
+				{
+					email,
+					password,
+				},
+				{ withCredentials: true }
+			)
+			.then(res => {
+				console.log(res);
+				if (res.status === 200) navigate('/all-habits');
+			})
+			.catch(errs => {
+				console.log(errs);
+				if (errs.response.status === 401 || errs.response.data.includes('NullReferenceException'))
+					errorData = 'Invalid email or password';
+			});
+		setLoginErrors(errorData);
+	};
+
 	const handleSubmit = event => {
 		event.preventDefault();
-		onLogin(email, password);
+		login(email, password);
 	};
 
 	useEffect(() => {
 		console.log(loginErrors);
-		return setErrors(loginErrors);
+		return setLoginErrors(loginErrors);
 	}, [loginErrors]);
 
 	const handleChangeEmail = event => setEmail(event.target.value);
@@ -54,7 +77,14 @@ export default function Login({ onLogin, loginErrors }) {
 								placeholder='Password'
 							/>
 						</div>
-						{errors && <p style={{ color: 'red', marginBottom: '0px' }}>{errors}</p>}
+						<div className={css['error-box']}>
+							{loginErrors && <p className={css['error-text']}>{loginErrors}</p>}
+							<div className={css['forgot-password-btn']}>
+								<Link to='/forget-password'>
+									<span>Forget Password?</span>
+								</Link>
+							</div>
+						</div>
 						<Button className={css['submit-btn']} type='submit'>
 							Login
 						</Button>
@@ -69,7 +99,7 @@ export default function Login({ onLogin, loginErrors }) {
 						<div className={css['line']}></div>
 					</div>
 					<div className={css['icons']}>
-						<div id='signInButton'>
+						<div id='signInButton' className={css['sign-in-btn']}>
 							{/* <GoogleLogin
 								clientId={clientId}
 								onSuccess={onGoogleLogin}
@@ -79,9 +109,11 @@ export default function Login({ onLogin, loginErrors }) {
 							/> */}
 							<img className={css['external-icon']} src={Google} />
 						</div>
-						<a className={css['external-link']} style={{ paddingLeft: '3rem' }} href='#'>
-							<img className={css['external-icon']} src={Facebook} />
-						</a>
+						<div id='signInButton' className={css['sign-in-btn']}>
+							<a className={css['external-link']} style={{ paddingLeft: '3rem' }} href='#'>
+								<img className={css['external-icon']} src={Facebook} />
+							</a>
+						</div>
 					</div>
 				</div>
 			</div>

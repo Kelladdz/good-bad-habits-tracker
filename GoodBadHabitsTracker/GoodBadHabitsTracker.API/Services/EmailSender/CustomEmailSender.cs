@@ -45,33 +45,37 @@ namespace GoodBadHabitsTracker.API.Services.EmailSender
             }
             return Task.CompletedTask;
         }
+        public Task SendPasswordResetLinkAsync(ApplicationUser user, string email, string resetLink, string token)
+        {
+            using (MimeMessage emailMessage = new MimeMessage())
+
+            {
+                MailboxAddress emailFrom = new MailboxAddress(mailSettings.Value.DisplayName, mailSettings.Value.Email);
+                emailMessage.From.Add(emailFrom);
+                MailboxAddress emailTo = new MailboxAddress(user.UserName, user.Email);
+                emailMessage.To.Add(emailTo);
+
+                emailMessage.Subject = "Password Reset Request";
+
+                BodyBuilder emailBodyBuilder = new BodyBuilder();
+                emailBodyBuilder.HtmlBody = File.ReadAllText(environment.WebRootPath + "\\EmailBodies\\resetPassword.html").Replace("{token}", token).Replace("{userId}", user.Id.ToString());
+                emailMessage.Body = emailBodyBuilder.ToMessageBody();
+                //this is the SmtpClient from the Mailkit.Net.Smtp namespace, not the System.Net.Mail one
+                using (MailKit.Net.Smtp.SmtpClient mailClient = new MailKit.Net.Smtp.SmtpClient())
+                {
+
+                    mailClient.CheckCertificateRevocation = false;
+                    mailClient.Connect(mailSettings.Value.Host, mailSettings.Value.Port, MailKit.Security.SecureSocketOptions.StartTls);
+                    mailClient.Authenticate("goodbadhabitstracker@gmail.com", "gpig isdo ytzx shjy");
+                    mailClient.Send(emailMessage);
+                    mailClient.Disconnect(true);
+                }
+            }
+            return Task.CompletedTask;
+        }
         public Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink)
         {
-                using (MimeMessage emailMessage = new MimeMessage())
-                {
-                    MailboxAddress emailFrom = new MailboxAddress(mailSettings.Value.DisplayName, mailSettings.Value.Email);
-                    emailMessage.From.Add(emailFrom);
-                    MailboxAddress emailTo = new MailboxAddress(user.UserName, user.Email);
-                    emailMessage.To.Add(emailTo);
-
-                    emailMessage.Subject = "Welcome To GoodBadHabitsTracker.";
-
-                    BodyBuilder emailBodyBuilder = new BodyBuilder();
-                    emailBodyBuilder.HtmlBody = $"<p>{confirmationLink}</p>";
-
-                    emailMessage.Body = emailBodyBuilder.ToMessageBody();
-                    //this is the SmtpClient from the Mailkit.Net.Smtp namespace, not the System.Net.Mail one
-                    using (MailKit.Net.Smtp.SmtpClient mailClient = new MailKit.Net.Smtp.SmtpClient())
-                    {
-                        
-                        mailClient.CheckCertificateRevocation = false;
-                        mailClient.Connect(mailSettings.Value.Host, mailSettings.Value.Port, MailKit.Security.SecureSocketOptions.StartTls);
-                        mailClient.Authenticate("goodbadhabitstracker@gmail.com", "gpig isdo ytzx shjy");
-                        mailClient.Send(emailMessage);
-                        mailClient.Disconnect(true);
-                    }
-                }
-            return Task.CompletedTask;
+            throw new NotImplementedException();
         }
 
         public Task SendPasswordResetCodeAsync(ApplicationUser user, string email, string resetCode)
@@ -79,7 +83,7 @@ namespace GoodBadHabitsTracker.API.Services.EmailSender
             throw new NotImplementedException();
         }
 
-        public Task SendPasswordResetLinkAsync(ApplicationUser user, string email, string resetLink)
+        Task IEmailSender<ApplicationUser>.SendPasswordResetLinkAsync(ApplicationUser user, string email, string resetLink)
         {
             throw new NotImplementedException();
         }
