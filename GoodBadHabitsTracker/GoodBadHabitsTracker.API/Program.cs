@@ -40,6 +40,10 @@ if (app.Environment.IsDevelopment())
         Secure = CookieSecurePolicy.Always
     });*/
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+
 app.UseHsts();
 app.UseHttpsRedirection();
 
@@ -50,5 +54,6 @@ app.UseCors();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
 
 app.Run();

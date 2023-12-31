@@ -32,11 +32,8 @@ function App() {
 		console.log(res.data);
 	};
 
-	const logout = async () => {
-		const response = await axios
-			.get('https://localhost:7154/API/Account/Logout', { withCredentials: true })
-			.then(navigate('/'));
-		navigate('/signin');
+	const logout = () => {
+		window.open('https://localhost:7154/API/Account/GoogleLogout?provider=Google', '_self');
 	};
 
 	return (

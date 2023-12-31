@@ -12,7 +12,7 @@ import { gapi } from 'gapi-script';
 import useNavigation from '../../hooks/useNavigation';
 import Cookies from 'js-cookie';
 
-export default function Login({ onGoogleLogin }) {
+export default function Login() {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [loginErrors, setLoginErrors] = useState('');
@@ -43,7 +43,7 @@ export default function Login({ onGoogleLogin }) {
 		setLoginErrors(errorData);
 	};
 
-	const googleLogin = async res => {
+	const googleLogin = res => {
 		const imageUrl = res.profileObj.imageUrl;
 		const email = res.profileObj.email;
 		const name = res.profileObj.name;
@@ -51,7 +51,6 @@ export default function Login({ onGoogleLogin }) {
 		console.log(email);
 		console.log(name);
 		window.open('https://localhost:7154/API/Account/GoogleLogin?provider=Google', '_self');
-		navigate('/');
 		// const response = await axios
 		// 	// .post('https://localhost:7154/API/Account/GoogleLogin', {
 		// 	// 	imageUrl,
@@ -101,8 +100,8 @@ export default function Login({ onGoogleLogin }) {
 		console.log(userCookie());
 		if (userCookie() !== undefined) {
 			navigate('/all-habits');
-	};})
-	
+		}
+	});
 
 	const handleChangeEmail = event => setEmail(event.target.value);
 	const handleChangePassword = event => setPassword(event.target.value);

@@ -3,11 +3,22 @@ import { useEffect } from 'react';
 import { Button } from 'react-bootstrap';
 import useNavigation from '../../hooks/useNavigation';
 
-export default function MainContent({ onLogout }) {
+export default function MainContent() {
 	const { navigate } = useNavigation();
 
 	const logout = async () => {
-		onLogout();
+		const response = await axios
+			.get('https://localhost:7154/API/Account/Logout', { withCredentials: true })
+			.then(res => {
+				console.log(res);
+				if (res.status === 200) {
+					googleLogout();
+				}
+			});
+	};
+
+	const googleLogout = () => {
+		window.open('https://localhost:7154/API/Account/GoogleLogout?provider=Google', '_self');
 	};
 
 	useEffect(() => {
