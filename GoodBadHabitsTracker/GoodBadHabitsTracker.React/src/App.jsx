@@ -24,10 +24,11 @@ function App() {
 	const googleLogin = async res => {
 		const email = res.profileObj.email;
 		const password = '';
-		const response = await axios.post('https://localhost:7154/register', {
+		const response = await axios.post('https://localhost:7154/API/Account/LoginGoogle', {
 			email,
 			password,
 		});
+		console.log(res.profileObj);
 		console.log(res.data);
 	};
 
@@ -44,8 +45,6 @@ function App() {
 				<Home />
 			</Route>
 			<Route path='/signin'>
-				<LoginPage 
-				onGoogleLogin={googleLogin} />
 				<LoginPage />
 			</Route>
 			<Route path='/signup'>

@@ -5,6 +5,7 @@ using GoodBadHabitsTracker.Core.DTOs;
 using GoodBadHabitsTracker.Core.Services.UserService;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
@@ -54,6 +55,83 @@ namespace GoodBadHabitsTracker.API.Controllers
             Response.Cookies.Append("Logged", "true");
 
             return new OkResult();
+        }
+
+        [HttpGet]
+        public IActionResult GoogleLogin([FromQuery]string provider)
+        {
+            var redirectUrl = Url.Action("GoogleLoginCallback", "Account");
+            var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            return new ChallengeResult(provider, properties);
+            /*var user = new ApplicationUser()
+            {
+                ImageUrl = request.ImageUrl,
+                Email = request.Email,
+                UserName = request.Name
+            };*/
+            /*signInManager.AuthenticationScheme = GoogleDefaults.AuthenticationScheme;
+             * 
+             * 
+            var userInfo = await signInManager.GetExternalLoginInfoAsync();
+            if (userInfo == null) return BadRequest(ModelState);
+            var result = await signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+            if (result.Succeeded) return new RedirectResult("https://localhost:5173");
+            else
+            {
+                var email = userInfo.Principal.FindFirstValue(ClaimTypes.Email);
+                if(email != null)
+                {
+                    var user = await userManager.FindByEmailAsync(email);
+                    if(user == null)
+                    {
+                        user = new ApplicationUser
+                        {
+                            UserName = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
+                            Email = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
+                            ImageUrl = userInfo.Principal.FindFirst(claim => claim.Type == "image").Value
+                        };
+                        await userManager.CreateAsync(user);
+                    }
+                    await userManager.AddLoginAsync(user, userInfo);
+                    await signInManager.SignInAsync(user, isPersistent: false);
+                    Redirect("https://localhost:5173");
+                    return new CreatedAtRouteResult("GetUserById", new { userId = user.Id }, user);
+                }
+                return BadRequest($"Email claim not received from {userInfo.LoginProvider}");
+            }    */
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GoogleLoginCallback()
+        {
+            signInManager.AuthenticationScheme = GoogleDefaults.AuthenticationScheme;
+            var userInfo = await signInManager.GetExternalLoginInfoAsync();
+            if (userInfo == null) return BadRequest(ModelState);
+            var result = await signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+            if (result.Succeeded) return new RedirectResult("https://localhost:5173");
+            else
+            {
+                var email = userInfo.Principal.FindFirstValue(ClaimTypes.Email);
+                if (email != null)
+                {
+                    var user = await userManager.FindByEmailAsync(email);
+                    if (user == null)
+                    {
+                        user = new ApplicationUser
+                        {
+                            UserName = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
+                            Email = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
+                            ImageUrl = userInfo.Principal.FindFirst(claim => claim.Type == "image").Value
+                        };
+                        await userManager.CreateAsync(user);
+                    }
+                    await userManager.AddLoginAsync(user, userInfo);
+                    Response.Cookies.Append("Logged", "true");
+                    Redirect("https://localhost:5173");
+                    return new CreatedResult();
+                }
+                return BadRequest($"Email claim not received from {userInfo.LoginProvider}");
+            }
         }
 
         [HttpGet]

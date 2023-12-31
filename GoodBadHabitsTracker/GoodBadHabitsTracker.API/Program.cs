@@ -11,6 +11,8 @@ using Newtonsoft.Json;
 using Asp.Versioning;
 using GoodBadHabitsTracker.API.Extensions;
 using Org.BouncyCastle.Crypto.Signers;
+using Serilog;
+using System.Web.WebPages;
 
 var builder = WebApplication.CreateBuilder(args);
 

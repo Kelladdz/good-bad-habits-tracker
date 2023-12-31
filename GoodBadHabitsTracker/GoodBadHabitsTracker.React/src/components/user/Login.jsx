@@ -10,12 +10,13 @@ import { useState, useEffect, useContext } from 'react';
 import { GoogleLogin, onFailure } from 'react-google-login';
 import { gapi } from 'gapi-script';
 import useNavigation from '../../hooks/useNavigation';
+import Cookies from 'js-cookie';
 
-export default function Login({onGoogleLogin}) {
+export default function Login({ onGoogleLogin }) {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [loginErrors, setLoginErrors] = useState('');
-	const {navigate} = useNavigation();
+	const { navigate } = useNavigation();
 
 	const clientId = '238617088969-sbq9rl49dhr623f55j6ae2c5g32r6sqk.apps.googleusercontent.com';
 
@@ -42,6 +43,37 @@ export default function Login({onGoogleLogin}) {
 		setLoginErrors(errorData);
 	};
 
+	const googleLogin = async res => {
+		const imageUrl = res.profileObj.imageUrl;
+		const email = res.profileObj.email;
+		const name = res.profileObj.name;
+		console.log(imageUrl);
+		console.log(email);
+		console.log(name);
+		window.open('https://localhost:7154/API/Account/GoogleLogin?provider=Google', '_self');
+		navigate('/');
+		// const response = await axios
+		// 	// .post('https://localhost:7154/API/Account/GoogleLogin', {
+		// 	// 	imageUrl,
+		// 	// 	email,
+		// 	// 	name,
+		// 	// })
+		// 	.post('https://localhost:7154/API/Account/GoogleLogin?provider=Google')
+		// 	.then(resp => {
+		// 		console.log(resp);
+		// 		if (resp.status === 204) {
+		// 			console.log('204');
+		// 			navigate('/');
+		// 		}
+		// 	})
+		// 	.catch(err => {
+		// 		console.log(err);
+		// 		if (err.response.status === 400) console.log('400');
+		// 	});
+		console.log(res.profileObj);
+		console.log(res);
+	};
+
 	const handleSubmit = event => {
 		event.preventDefault();
 		login(email, password);
@@ -51,6 +83,26 @@ export default function Login({onGoogleLogin}) {
 		console.log(loginErrors);
 		return setLoginErrors(loginErrors);
 	}, [loginErrors]);
+
+	useEffect(() => {
+		function start() {
+			gapi.client.init({
+				clientId: clientId,
+				scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+			});
+		}
+		gapi.load('client:auth2', start);
+	});
+
+	useEffect(() => {
+		const userCookie = () => {
+			return Cookies.get('Logged');
+		};
+		console.log(userCookie());
+		if (userCookie() !== undefined) {
+			navigate('/all-habits');
+	};})
+	
 
 	const handleChangeEmail = event => setEmail(event.target.value);
 	const handleChangePassword = event => setPassword(event.target.value);
@@ -102,10 +154,9 @@ export default function Login({onGoogleLogin}) {
 						<div id='signInButton' className={css['sign-in-btn']}>
 							<GoogleLogin
 								clientId={clientId}
-								onSuccess={onGoogleLogin}
+								onSuccess={googleLogin}
 								onFailure={onFailure}
 								cookiePolicy={'single_host_origin'}
-								isSignedIn={true}
 							/>
 							<img className={css['external-icon']} src={Google} />
 						</div>

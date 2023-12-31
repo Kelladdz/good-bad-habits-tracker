@@ -5,7 +5,7 @@ export default function LoginPage({ onGoogleLogin }) {
 	return (
 		<div>
 			<ErrorsProvider>
-				<Login onGoogleLogin={onGoogleLogin}  />
+				<Login onGoogleLogin={onGoogleLogin} />
 			</ErrorsProvider>
 		</div>
 	);

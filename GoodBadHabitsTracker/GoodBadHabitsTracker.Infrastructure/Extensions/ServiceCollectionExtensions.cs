@@ -2,7 +2,10 @@
 using GoodBadHabitsTracker.Core.Domain.Interfaces;
 using GoodBadHabitsTracker.Infrastructure.Persistance;
 using GoodBadHabitsTracker.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -27,6 +30,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
             services.AddScoped<IHabitsRepository, HabitsRepository>();
             services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
             {
+                options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+/ ";
                 options.User.RequireUniqueEmail = true;
                 options.Password.RequireUppercase = false;
                 options.Password.RequireLowercase = false;
@@ -36,7 +40,11 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                 .AddTokenProvider<DataProtectorTokenProvider<ApplicationUser>>(TokenOptions.DefaultProvider)
                 .AddUserStore<UserStore<ApplicationUser, ApplicationRole, HabitsDbContext, Guid>>()
                 .AddRoleStore<RoleStore<ApplicationRole, HabitsDbContext, Guid>>();
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+            })
                 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
                 {
                     options.Cookie.Name = "UserLoginCookie";
@@ -49,7 +57,32 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                     };
                     options.Cookie.HttpOnly = true;
                     options.Cookie.SameSite = SameSiteMode.Lax;
+                })
+                /*.AddOpenIdConnect("Google", options =>
+                {
+                    options.ClientId = configuration.GetSection("web:client_id").Value;
+                    options.ClientSecret = configuration.GetSection("web:client_secret").Value;
+                    options.Scope.Add("email");
+                    options.Scope.Add("profile");
+                    options.ClaimActions.MapJsonKey("image", "picture");
+                });*/
+                .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+                {
+                    options.ClientId = configuration.GetSection("web:client_id").Value;
+                    options.ClientSecret = configuration.GetSection("web:client_secret").Value;
+                    options.Scope.Add("email");
+                    options.Scope.Add("profile");
+                    options.ClaimActions.MapJsonKey("image", "picture");
+                    options.SignInScheme = Microsoft.AspNetCore.Identity.IdentityConstants.ExternalScheme;
                 });
+            /*.AddOAuth<GoogleOptions, GoogleHandler>(GoogleDefaults.AuthenticationScheme, options =>
+            {
+                options.ClientId = configuration.GetSection("web:client_id").Value;
+                options.ClientSecret = configuration.GetSection("web:client_secret").Value;
+                options.Scope.Add("email");
+                options.Scope.Add("profile");
+                options.ClaimActions.MapJsonKey("image", "picture");
+            });*/
         }
     }
 }
