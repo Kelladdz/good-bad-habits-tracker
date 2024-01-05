@@ -5,7 +5,7 @@ import { resolve } from 'path';
 
 export default defineConfig({
 	server: {
-		port: 5173,
+		port: 8080,
 		https: {
 			key: readFileSync(resolve('C:\\Users\\Admin\\.vite-plugin-mkcert\\dev.pem')),
 			cert: readFileSync(resolve('C:\\Users\\Admin\\.vite-plugin-mkcert\\cert.pem')), // Not needed for Vite 5+

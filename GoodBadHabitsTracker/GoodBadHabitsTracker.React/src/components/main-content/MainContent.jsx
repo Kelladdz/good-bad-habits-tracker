@@ -12,13 +12,17 @@ export default function MainContent() {
 			.then(res => {
 				console.log(res);
 				if (res.status === 200) {
-					googleLogout();
+					facebookLogout();
 				}
 			});
 	};
 
 	const googleLogout = () => {
 		window.open('https://localhost:7154/API/Account/GoogleLogout?provider=Google', '_self');
+	};
+
+	const facebookLogout = () => {
+		window.open('https://localhost:7154/API/Account/FacebookLogout?provider=Facebook', '_self');
 	};
 
 	useEffect(() => {

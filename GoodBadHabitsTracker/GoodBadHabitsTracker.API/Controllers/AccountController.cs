@@ -3,6 +3,7 @@ using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.DTOs;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -64,7 +65,7 @@ namespace GoodBadHabitsTracker.API.Controllers
             var userInfo = await signInManager.GetExternalLoginInfoAsync();
             if (userInfo == null) return BadRequest(ModelState);
             var result = await signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: false, bypassTwoFactor: true);
-            if (result.Succeeded) return new RedirectResult("https://localhost:5173");
+            if (result.Succeeded) return new RedirectResult("https://localhost:8080");
             else
             {
                 var email = userInfo.Principal.FindFirstValue(ClaimTypes.Email);
@@ -83,8 +84,8 @@ namespace GoodBadHabitsTracker.API.Controllers
                     }
                     await userManager.AddLoginAsync(user, userInfo);
                     Response.Cookies.Append("Logged", "true");
-                    Redirect("https://localhost:5173");
-                    return new RedirectResult("https://localhost:5173");
+                    Redirect("https://localhost:8080");
+                    return new RedirectResult("https://localhost:8080");
                 }
                 return BadRequest($"Email claim not received from {userInfo.LoginProvider}");
             }
@@ -109,8 +110,74 @@ namespace GoodBadHabitsTracker.API.Controllers
             if (user == null) return BadRequest(ModelState);
             var result = await userManager.RemoveLoginAsync(user, userInfo.LoginProvider, userInfo.ProviderKey);
             if (!result.Succeeded) return new BadRequestResult();
-            return new RedirectResult("https://localhost:5173");
+            return new RedirectResult("https://localhost:8080");
+        }
 
+        [HttpGet]
+        public IActionResult FacebookLogin([FromQuery] string provider)
+        {
+            var redirectUrl = Url.Action("FacebookLoginCallback", "Account");
+            var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            return new ChallengeResult(provider, properties);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> FacebookLoginCallback()
+        {
+            signInManager.AuthenticationScheme = FacebookDefaults.AuthenticationScheme;
+            var userInfo = await signInManager.GetExternalLoginInfoAsync();
+            if (userInfo == null) return BadRequest(ModelState);
+            
+            var result = await signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+            if (result.Succeeded) return new RedirectResult("https://localhost:8080");
+            else
+            {
+                var email = userInfo.Principal.FindFirstValue(ClaimTypes.Email);
+                if (email != null)
+                {
+                    var user = await userManager.FindByEmailAsync(email);
+                    var identifier = userInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                    if (user == null)
+                    {
+                        user = new ApplicationUser
+                        {
+                            UserName = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
+                            Email = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
+                            ImageUrl = $"https://graph.facebook.com/{identifier}/picturetype=album"
+                    };
+                        await userManager.CreateAsync(user);
+                        
+                        
+                    }
+                    await userManager.AddLoginAsync(user, userInfo);
+                    Response.Cookies.Append("Logged", "true");
+                    Redirect("https://localhost:8080");
+                    return new RedirectResult("https://localhost:8080");
+                }
+                return BadRequest($"Email claim not received from {userInfo.LoginProvider}");
+            }
+        }
+
+        [HttpGet]
+        public IActionResult FacebookLogout([FromQuery] string provider)
+        {
+            var redirectUrl = Url.Action("FacebookLogoutCallback", "Account");
+            var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            return new ChallengeResult(provider, properties);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> FacebookLogoutCallback()
+        {
+            signInManager.AuthenticationScheme = FacebookDefaults.AuthenticationScheme;
+            var userInfo = await signInManager.GetExternalLoginInfoAsync();
+
+            if (userInfo == null) return BadRequest(ModelState);
+            var user = await userManager.FindByLoginAsync(userInfo.LoginProvider, userInfo.ProviderKey);
+            if (user == null) return BadRequest(ModelState);
+            var result = await userManager.RemoveLoginAsync(user, userInfo.LoginProvider, userInfo.ProviderKey);
+            if (!result.Succeeded) return new BadRequestResult();
+            return new RedirectResult("https://localhost:8080");
         }
 
         [HttpGet]

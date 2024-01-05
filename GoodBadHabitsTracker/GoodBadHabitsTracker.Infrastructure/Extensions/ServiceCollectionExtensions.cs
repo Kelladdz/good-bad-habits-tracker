@@ -5,6 +5,7 @@ using GoodBadHabitsTracker.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -73,7 +74,14 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                     options.Scope.Add("email");
                     options.Scope.Add("profile");
                     options.ClaimActions.MapJsonKey("image", "picture");
-                    options.SignInScheme = Microsoft.AspNetCore.Identity.IdentityConstants.ExternalScheme;
+                    options.SignInScheme = IdentityConstants.ExternalScheme;
+                }).
+                AddFacebook(options =>
+                {
+                    options.AppSecret = configuration.GetSection("web:facebook_client_secret").Value;
+                    options.AppId = configuration.GetSection("web:facebook_app_id").Value;
+                    options.Scope.Add("email");
+                    options.Scope.Add("public_profile");
                 });
             /*.AddOAuth<GoogleOptions, GoogleHandler>(GoogleDefaults.AuthenticationScheme, options =>
             {

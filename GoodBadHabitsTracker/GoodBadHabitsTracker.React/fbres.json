@@ -1,0 +1,82 @@
+{
+	"name": "Alexander T. Mole",
+	"email": "aleksander.kret@onet.pl",
+	"picture": {
+		"data": {
+			"height": 50,
+			"is_silhouette": false,
+			"url": "https://platform-lookaside.fbsbx.com/platform/profilepic/?asid=2069075516804478&height=50&width=50&ext=1707065534&hash=AfpclezDOx-vhp9QzY-a7PREuUN06bbpk1B26skawn-moQ",
+			"width": 50
+		}
+	},
+	"id": "2069075516804478",
+	"userID": "2069075516804478",
+	"expiresIn": 4066,
+	"accessToken": "EAAEpSyhin8IBO3jjC8ZBLtUlWA2Hdx6if0tXZBrMEihpLBnHSmXy2LF3ovNLnV7NXuZAmZAZCs18Q52ZB6Ok0C0JIpT2WmriZBLauWLMuqpBgt0NKD2etrayr95ZBQTVcdbZCKZA0R0tuAsCtclFvjVx58IoJSGiFvdmZBe7GXuLDoilil236vHNXNrSqO9qRqgjFmKr3ZCOQTsUcwtEsI3tzSF1oYWSWn8ZD",
+	"signedRequest": "iNJE1tej_qR1Z8d4Na4K2TC2fL1S1Guzu9BdMjeOsW8.eyJ1c2VyX2lkIjoiMjA2OTA3NTUxNjgwNDQ3OCIsImNvZGUiOiJBUUFlU1JSa0g4OHM1Z0s5aHpEV1dHOE55dnlfc240RnRCRm91Y3BtdFhaMzJGc2R4X3JaMXdBeHY0UmNzZmtaM2tjZHdPZC1uekY2NFBuS2x4RWlRSWJSeW9BQldRdmpKRGhJUkJHTFhZbnRfVHR1Mkg5YVB5T3cyeEdzdFdEcDRrQzJKZDBBdWdvcUlobEdVRUc3NjNXbHU0Z3REeXlDRGRyN0NWajBrOGhfNWQ0MlltU2RSSHJpcno1QmRkbkhkN2dUQVNJYnNQUFBndFEwZDNNSUtFYUMtQXNUVjR1ejdDYlN5Z2FxTllHSUh0aXc2ZE9yZ09SOUZjWERaSk9rLTBValFZaGd3ZU5vdlMwbmhNa0hQZWtZSWFOV1ZCaEMtMm1vWUJZTU95dk1Ka1JjTTJTN1ZKTUVJXzYzcWtzTUxFeFNBZHpwMjdZcWJqd21BMlhGRjJGTCIsImFsZ29yaXRobSI6IkhNQUMtU0hBMjU2IiwiaXNzdWVkX2F0IjoxNzA0NDczNTM0fQ",
+	"graphDomain": "facebook",
+	"data_access_expiration_time": 1712249533
+}
+{
+    "googleId": "110082750266243942303",
+    "imageUrl": "https://lh3.googleusercontent.com/a/ACg8ocIJek0pYwGpfde9PoBd-EqS9bq4qbCGS80TmlWaH2pbSw=s96-c",
+    "email": "dobrestilomusic66@gmail.com",
+    "name": "Dobre Stilo",
+    "givenName": "Dobre",
+    "familyName": "Stilo"
+}
+
+{
+    "Ca": "110082750266243942303",
+    "xc": {
+        "token_type": "Bearer",
+        "access_token": "ya29.a0AfB_byBaRKpsbA44idTyYkNqOFZpLjaFr7zaYCYSljqMhhhA76Fbscn4Bw_uTQEjfgsDQAH9dcdjHwE77-31sV5wABpjgtsNzE-jeTSHjvHhO34t6n0OBKrocnn72BSzciWYTw6BKxWgZfY5BMazcu-H73zjoOCnvgaCgYKAd8SARMSFQHGX2MiJh8FIMwwPj1eaUYiTOKegw0169",
+        "scope": "email profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid",
+        "login_hint": "AJDLj6J9nXGC8nvyinFBHbJdEwBhLxXFF8IyHxKA0BgWYSh0dTFumc6xv1UNo3kljCVOiwa0UexX3yjfmS5G3xOm4abWYMcivw",
+        "expires_in": 3599,
+        "id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjkxNDEzY2Y0ZmEwY2I5MmEzYzNmNWEwNTQ1MDkxMzJjNDc2NjA5MzciLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIiwiYXpwIjoiMjM4NjE3MDg4OTY5LXNicTlybDQ5ZGhyNjIzZjU1ajZhZTJjNWczMnI2c3FrLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwiYXVkIjoiMjM4NjE3MDg4OTY5LXNicTlybDQ5ZGhyNjIzZjU1ajZhZTJjNWczMnI2c3FrLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTEwMDgyNzUwMjY2MjQzOTQyMzAzIiwiZW1haWwiOiJkb2JyZXN0aWxvbXVzaWM2NkBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiYXRfaGFzaCI6IjVqdUZPdXNodUpUQjU4N2IzemV0SHciLCJuYmYiOjE3MDQ0NzQzMzYsIm5hbWUiOiJEb2JyZSBTdGlsbyIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NJSmVrMHBZd0dwZmRlOVBvQmQtRXFTOWJxNHFiQ0dTODBUbWxXYUgycGJTdz1zOTYtYyIsImdpdmVuX25hbWUiOiJEb2JyZSIsImZhbWlseV9uYW1lIjoiU3RpbG8iLCJsb2NhbGUiOiJwbCIsImlhdCI6MTcwNDQ3NDYzNiwiZXhwIjoxNzA0NDc4MjM2LCJqdGkiOiJhM2M4Yjk4YTkzZGNjM2Y3NWYxYjEzODdlNThjOTI2NTIwZTMzOTk4In0.bXuNRz7aQT2zKaGY97_UcIHVfGgdwccJaONZJil1wWmrMgYWEOi9jqKa_ABmC-9AEhCuSy2CLH5yOLr3YSVCrjTBlx7epPgo1zOI3p8H3p_m5lPAhnMEpG2ciRiLpC2TaVgQIKx2XvFmgKVirRtdry8HXtwYH8vPuXIodKwuxmC7XnVCmF2sf2qk_9PKBZraliCdzgJWVoNS9a2bpSLpwyASxrrSuN9Mjw9Di-8PWkeomVUogon5wmof4Nckj0a59ftD-A_wMgWqSuC0o2qen4W0yitXLtWLf0SxjUcHdIZj1Mo7VCvEr_EvW7jHyCus6FAN7eOvaPRSQyPkjyyl5g",
+        "session_state": {
+            "extraQueryParams": {
+                "authuser": "0"
+            }
+        },
+        "first_issued_at": 1704474635612,
+        "expires_at": 1704478234612,
+        "idpId": "google"
+    },
+    "wt": {
+        "NT": "110082750266243942303",
+        "Ad": "Dobre Stilo",
+        "rV": "Dobre",
+        "uT": "Stilo",
+        "hK": "https://lh3.googleusercontent.com/a/ACg8ocIJek0pYwGpfde9PoBd-EqS9bq4qbCGS80TmlWaH2pbSw=s96-c",
+        "cu": "dobrestilomusic66@gmail.com"
+    },
+    "googleId": "110082750266243942303",
+    "tokenObj": {
+        "token_type": "Bearer",
+        "access_token": "ya29.a0AfB_byBaRKpsbA44idTyYkNqOFZpLjaFr7zaYCYSljqMhhhA76Fbscn4Bw_uTQEjfgsDQAH9dcdjHwE77-31sV5wABpjgtsNzE-jeTSHjvHhO34t6n0OBKrocnn72BSzciWYTw6BKxWgZfY5BMazcu-H73zjoOCnvgaCgYKAd8SARMSFQHGX2MiJh8FIMwwPj1eaUYiTOKegw0169",
+        "scope": "email profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid",
+        "login_hint": "AJDLj6J9nXGC8nvyinFBHbJdEwBhLxXFF8IyHxKA0BgWYSh0dTFumc6xv1UNo3kljCVOiwa0UexX3yjfmS5G3xOm4abWYMcivw",
+        "expires_in": 3599,
+        "id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjkxNDEzY2Y0ZmEwY2I5MmEzYzNmNWEwNTQ1MDkxMzJjNDc2NjA5MzciLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIiwiYXpwIjoiMjM4NjE3MDg4OTY5LXNicTlybDQ5ZGhyNjIzZjU1ajZhZTJjNWczMnI2c3FrLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwiYXVkIjoiMjM4NjE3MDg4OTY5LXNicTlybDQ5ZGhyNjIzZjU1ajZhZTJjNWczMnI2c3FrLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTEwMDgyNzUwMjY2MjQzOTQyMzAzIiwiZW1haWwiOiJkb2JyZXN0aWxvbXVzaWM2NkBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiYXRfaGFzaCI6IjVqdUZPdXNodUpUQjU4N2IzemV0SHciLCJuYmYiOjE3MDQ0NzQzMzYsIm5hbWUiOiJEb2JyZSBTdGlsbyIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NJSmVrMHBZd0dwZmRlOVBvQmQtRXFTOWJxNHFiQ0dTODBUbWxXYUgycGJTdz1zOTYtYyIsImdpdmVuX25hbWUiOiJEb2JyZSIsImZhbWlseV9uYW1lIjoiU3RpbG8iLCJsb2NhbGUiOiJwbCIsImlhdCI6MTcwNDQ3NDYzNiwiZXhwIjoxNzA0NDc4MjM2LCJqdGkiOiJhM2M4Yjk4YTkzZGNjM2Y3NWYxYjEzODdlNThjOTI2NTIwZTMzOTk4In0.bXuNRz7aQT2zKaGY97_UcIHVfGgdwccJaONZJil1wWmrMgYWEOi9jqKa_ABmC-9AEhCuSy2CLH5yOLr3YSVCrjTBlx7epPgo1zOI3p8H3p_m5lPAhnMEpG2ciRiLpC2TaVgQIKx2XvFmgKVirRtdry8HXtwYH8vPuXIodKwuxmC7XnVCmF2sf2qk_9PKBZraliCdzgJWVoNS9a2bpSLpwyASxrrSuN9Mjw9Di-8PWkeomVUogon5wmof4Nckj0a59ftD-A_wMgWqSuC0o2qen4W0yitXLtWLf0SxjUcHdIZj1Mo7VCvEr_EvW7jHyCus6FAN7eOvaPRSQyPkjyyl5g",
+        "session_state": {
+            "extraQueryParams": {
+                "authuser": "0"
+            }
+        },
+        "first_issued_at": 1704474635612,
+        "expires_at": 1704478234612,
+        "idpId": "google"
+    },
+    "tokenId": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjkxNDEzY2Y0ZmEwY2I5MmEzYzNmNWEwNTQ1MDkxMzJjNDc2NjA5MzciLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIiwiYXpwIjoiMjM4NjE3MDg4OTY5LXNicTlybDQ5ZGhyNjIzZjU1ajZhZTJjNWczMnI2c3FrLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwiYXVkIjoiMjM4NjE3MDg4OTY5LXNicTlybDQ5ZGhyNjIzZjU1ajZhZTJjNWczMnI2c3FrLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTEwMDgyNzUwMjY2MjQzOTQyMzAzIiwiZW1haWwiOiJkb2JyZXN0aWxvbXVzaWM2NkBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiYXRfaGFzaCI6IjVqdUZPdXNodUpUQjU4N2IzemV0SHciLCJuYmYiOjE3MDQ0NzQzMzYsIm5hbWUiOiJEb2JyZSBTdGlsbyIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NJSmVrMHBZd0dwZmRlOVBvQmQtRXFTOWJxNHFiQ0dTODBUbWxXYUgycGJTdz1zOTYtYyIsImdpdmVuX25hbWUiOiJEb2JyZSIsImZhbWlseV9uYW1lIjoiU3RpbG8iLCJsb2NhbGUiOiJwbCIsImlhdCI6MTcwNDQ3NDYzNiwiZXhwIjoxNzA0NDc4MjM2LCJqdGkiOiJhM2M4Yjk4YTkzZGNjM2Y3NWYxYjEzODdlNThjOTI2NTIwZTMzOTk4In0.bXuNRz7aQT2zKaGY97_UcIHVfGgdwccJaONZJil1wWmrMgYWEOi9jqKa_ABmC-9AEhCuSy2CLH5yOLr3YSVCrjTBlx7epPgo1zOI3p8H3p_m5lPAhnMEpG2ciRiLpC2TaVgQIKx2XvFmgKVirRtdry8HXtwYH8vPuXIodKwuxmC7XnVCmF2sf2qk_9PKBZraliCdzgJWVoNS9a2bpSLpwyASxrrSuN9Mjw9Di-8PWkeomVUogon5wmof4Nckj0a59ftD-A_wMgWqSuC0o2qen4W0yitXLtWLf0SxjUcHdIZj1Mo7VCvEr_EvW7jHyCus6FAN7eOvaPRSQyPkjyyl5g",
+    "accessToken": "ya29.a0AfB_byBaRKpsbA44idTyYkNqOFZpLjaFr7zaYCYSljqMhhhA76Fbscn4Bw_uTQEjfgsDQAH9dcdjHwE77-31sV5wABpjgtsNzE-jeTSHjvHhO34t6n0OBKrocnn72BSzciWYTw6BKxWgZfY5BMazcu-H73zjoOCnvgaCgYKAd8SARMSFQHGX2MiJh8FIMwwPj1eaUYiTOKegw0169",
+    "profileObj": {
+        "googleId": "110082750266243942303",
+        "imageUrl": "https://lh3.googleusercontent.com/a/ACg8ocIJek0pYwGpfde9PoBd-EqS9bq4qbCGS80TmlWaH2pbSw=s96-c",
+        "email": "dobrestilomusic66@gmail.com",
+        "name": "Dobre Stilo",
+        "givenName": "Dobre",
+        "familyName": "Stilo"
+    }
+}

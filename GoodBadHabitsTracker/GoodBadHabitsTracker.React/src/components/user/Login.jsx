@@ -8,6 +8,7 @@ import { Button } from 'react-bootstrap';
 import Link from '../Link';
 import { useState, useEffect, useContext } from 'react';
 import { GoogleLogin, onFailure } from 'react-google-login';
+import FacebookLogin from 'react-facebook-login';
 import { gapi } from 'gapi-script';
 import useNavigation from '../../hooks/useNavigation';
 import Cookies from 'js-cookie';
@@ -44,12 +45,6 @@ export default function Login() {
 	};
 
 	const googleLogin = res => {
-		const imageUrl = res.profileObj.imageUrl;
-		const email = res.profileObj.email;
-		const name = res.profileObj.name;
-		console.log(imageUrl);
-		console.log(email);
-		console.log(name);
 		window.open('https://localhost:7154/API/Account/GoogleLogin?provider=Google', '_self');
 		// const response = await axios
 		// 	// .post('https://localhost:7154/API/Account/GoogleLogin', {
@@ -71,6 +66,11 @@ export default function Login() {
 		// 	});
 		console.log(res.profileObj);
 		console.log(res);
+	};
+
+	const facebookLogin = res => {
+		console.log(res);
+		window.open('https://localhost:7154/API/Account/FacebookLogin?provider=Facebook', '_self');
 	};
 
 	const handleSubmit = event => {
@@ -160,6 +160,14 @@ export default function Login() {
 							<img className={css['external-icon']} src={Google} />
 						</div>
 						<div id='signInButton' className={css['sign-in-btn']}>
+							<FacebookLogin
+								appId='326877753548738'
+								scope='email, public_profile'
+								autoLoad={false}
+								fields='name,email,picture'
+								callback={facebookLogin}
+							/>
+
 							<a className={css['external-link']} style={{ paddingLeft: '3rem' }} href='#'>
 								<img className={css['external-icon']} src={Facebook} />
 							</a>
