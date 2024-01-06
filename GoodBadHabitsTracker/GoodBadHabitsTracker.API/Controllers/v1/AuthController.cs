@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using GoodBadHabitsTracker.API.Exceptions;
 using GoodBadHabitsTracker.API.Services.EmailSender;
 using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.DTOs;
@@ -13,9 +14,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
+
 namespace GoodBadHabitsTracker.API.Controllers.v1
 {
-    [Route("API/[controller]")]  
+    [Route("api/[controller]")]  
     [ApiVersion("1.0")]
     [ApiController]
     public class AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender, IUserAccessor userAccessor, IUserService userService) : ControllerBase
@@ -24,19 +26,30 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         public async Task<IActionResult> Register
             ([FromBody] RegisterDto request)
         {
-            if (request == null) return BadRequest();
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var user = new ApplicationUser()
+            try
             {
-                Email = request.Email,
-                UserName = request.Name,
-            };
-            IdentityResult result = await userManager.CreateAsync(user, request.Password!);
-            if (!result.Succeeded) return BadRequest(result.Errors);
+                if (request == null) throw new NullReferenceException(nameof(request));
+                if (!ModelState.IsValid) throw new ArgumentException("User data is invalid");
 
-            emailSender.SendWelcomeMessageAsync(user, user.Email);
-            return new CreatedAtRouteResult("GetUserById", new { userId = user.Id }, user);
+                var user = new ApplicationUser()
+                {
+                    Email = request.Email,
+                    UserName = request.Name,
+                };
+                IdentityResult result = await userManager.CreateAsync(user, request.Password!);
+                if (!result.Succeeded) throw new ConflictException("This name or email exists.", StatusCodes.Status409Conflict);
+
+                emailSender.SendWelcomeMessageAsync(user, user.Email);
+                return new CreatedAtRouteResult("GetUserById", new { userId = user.Id }, user);
+            }
+            catch (Exception ex)
+            {
+                if (ex is NullReferenceException) return BadRequest(ex.Message);
+                if (ex is ArgumentException) return BadRequest(ex.Message);
+                if (ex is ConflictException) return Conflict(ex.Message);
+                else return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+            
         }
 
         [HttpPost("login")]
@@ -56,7 +69,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             return new OkResult();
         }
 
-        [HttpGet]
+        [HttpGet("external-login")]
         public IActionResult ExternalLogin([FromQuery] string provider)
         {
             var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account");
@@ -64,7 +77,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             return new ChallengeResult(provider, properties);
         }
 
-        [HttpGet]
+        [HttpPost("external-login")]
         public async Task<IActionResult> ExternalLoginCallback()
         {
             var userInfo = await signInManager.GetExternalLoginInfoAsync();
@@ -118,7 +131,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             }
         }
 
-        [HttpGet]
+        [HttpGet("external-logout")]
         public async Task<IActionResult> ExternalLogout()
         {
 
@@ -128,7 +141,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             return new ChallengeResult(properties);
         }
 
-        [HttpGet]
+        [HttpPost("external-logout")]
         public async Task<IActionResult> ExternalLogoutCallback()
         {
             var userInfo = await signInManager.GetExternalLoginInfoAsync();
@@ -144,7 +157,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             return new RedirectResult("https://localhost:8080");
         }
 
-        [HttpGet]
+        /*[HttpGet]
         public IActionResult GoogleLogin([FromQuery] string provider)
         {
             var redirectUrl = Url.Action("GoogleLoginCallback", "Account");
@@ -272,9 +285,9 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             var result = await userManager.RemoveLoginAsync(user, userInfo.LoginProvider, userInfo.ProviderKey);
             if (!result.Succeeded) return new BadRequestResult();
             return new RedirectResult("https://localhost:8080");
-        }
+        }*/
 
-        [HttpGet]
+        [HttpGet("logout")]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync();

@@ -47,8 +47,6 @@ namespace GoodBadHabitsTracker.API.Extensions
                 options.OperationFilter<SecurityRequirementsOperationFilter>();
                 options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "api.xml"));
             });
-            services.AddExceptionHandler<BadRequestExceptionHandler>();
-            services.AddProblemDetails();
         }
     }
 }

@@ -12,9 +12,9 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
 {
     [ApiVersion("1.0")]
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [Authorize]
-    public class HabitsController(IHabitsService habitsService, IMapper mapper, IUserAccessor userAccessor) : CustomControllerBase
+    public class HabitsController(IHabitsService habitsService, IMapper mapper, IUserAccessor userAccessor) : ControllerBase
     {
         /// <summary>
         /// To get list of habits from "Habits" table.

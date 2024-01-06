@@ -30,6 +30,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                 options.UseSqlServer(configuration.GetConnectionString("Default")));
             services.AddScoped<IHabitsRepository, HabitsRepository>();
             services.AddScoped<IUsersRepository, UsersRepository>();
+
             services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
             {
                 options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+/ ";
