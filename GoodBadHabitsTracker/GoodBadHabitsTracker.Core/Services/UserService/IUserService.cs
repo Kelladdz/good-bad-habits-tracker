@@ -12,6 +12,6 @@ namespace GoodBadHabitsTracker.Core.Services.UserService
 {
      public interface IUserService
     {
-        Task<ApplicationUser> Authenticate(Google.Apis.Auth.GoogleJsonWebSignature.Payload payload);
+        string GetExternalLoginProvider(Guid userId);
     }
 }

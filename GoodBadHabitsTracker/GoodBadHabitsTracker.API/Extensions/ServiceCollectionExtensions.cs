@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using GoodBadHabitsTracker.API.Exceptions;
 using GoodBadHabitsTracker.API.Services.EmailSender;
 using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.Domain.Interfaces;
@@ -19,6 +20,7 @@ namespace GoodBadHabitsTracker.API.Extensions
         public static void AddUi(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<MailSettings>(configuration.GetSection("MailSettings"));
+            services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
             services.AddTransient<ICustomEmailSender<ApplicationUser>, CustomEmailSender>();
             services.AddControllers().AddNewtonsoftJson(options =>
             {
@@ -45,6 +47,8 @@ namespace GoodBadHabitsTracker.API.Extensions
                 options.OperationFilter<SecurityRequirementsOperationFilter>();
                 options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "api.xml"));
             });
+            services.AddExceptionHandler<BadRequestExceptionHandler>();
+            services.AddProblemDetails();
         }
     }
 }

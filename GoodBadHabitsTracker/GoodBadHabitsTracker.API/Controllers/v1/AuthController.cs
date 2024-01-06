@@ -1,6 +1,9 @@
-﻿using GoodBadHabitsTracker.API.Services.EmailSender;
+﻿using Asp.Versioning;
+using GoodBadHabitsTracker.API.Services.EmailSender;
 using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.DTOs;
+using GoodBadHabitsTracker.Core.Services.UserAccessor;
+using GoodBadHabitsTracker.Core.Services.UserService;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Facebook;
@@ -10,15 +13,18 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace GoodBadHabitsTracker.API.Controllers
+namespace GoodBadHabitsTracker.API.Controllers.v1
 {
-    [Route("API/[controller]/[action]")]
-    public class AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender, IHttpContextAccessor httpContextAccessor) : ControllerBase
+    [Route("API/[controller]")]  
+    [ApiVersion("1.0")]
+    [ApiController]
+    public class AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender, IUserAccessor userAccessor, IUserService userService) : ControllerBase
     {
-        [HttpPost]
+        [HttpPost("register")]
         public async Task<IActionResult> Register
             ([FromBody] RegisterDto request)
         {
+            if (request == null) return BadRequest();
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var user = new ApplicationUser()
@@ -33,7 +39,7 @@ namespace GoodBadHabitsTracker.API.Controllers
             return new CreatedAtRouteResult("GetUserById", new { userId = user.Id }, user);
         }
 
-        [HttpPost]
+        [HttpPost("login")]
         public async Task<IActionResult> Login
             ([FromBody] LoginDto request)
         {
@@ -48,6 +54,94 @@ namespace GoodBadHabitsTracker.API.Controllers
             Response.Cookies.Append("Logged", "true");
 
             return new OkResult();
+        }
+
+        [HttpGet]
+        public IActionResult ExternalLogin([FromQuery] string provider)
+        {
+            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account");
+            var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            return new ChallengeResult(provider, properties);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExternalLoginCallback()
+        {
+            var userInfo = await signInManager.GetExternalLoginInfoAsync();
+            if (userInfo == null) return BadRequest(ModelState);
+
+            var result = await signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+            if (result.Succeeded)
+            {
+                Response.Cookies.Append("Logged", "true");
+                return new RedirectResult("https://localhost:8080");
+            }
+
+            else
+            {
+                var email = userInfo.Principal.FindFirstValue(ClaimTypes.Email);
+                if (email != null)
+                {
+                    var user = await userManager.FindByEmailAsync(email);
+                    if (user == null)
+                    {
+                        if (userInfo.LoginProvider == "Google")
+                        {
+                            user = new ApplicationUser
+                            {
+                                UserName = userInfo.Principal.FindFirstValue(ClaimTypes.Name),
+                                Email = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
+                                ImageUrl = userInfo.Principal.FindFirst(claim => claim.Type == "image").Value
+                            };
+                        }
+                        if (userInfo.LoginProvider == "Facebook")
+                        {
+                            var identifier = userInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                            user = new ApplicationUser
+                            {
+                                UserName = userInfo.Principal.FindFirstValue(ClaimTypes.Name),
+                                Email = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
+                                ImageUrl = $"https://graph.facebook.com/{identifier}/picturetype=album"
+                            };
+                        }
+                        await userManager.CreateAsync(user);
+                        await userManager.AddClaimAsync(user, new Claim("loginProvider", userInfo.LoginProvider));
+                    }
+                    await userManager.AddLoginAsync(user, userInfo);
+                    await signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: true, bypassTwoFactor: true);
+                    /*await signInManager.SignInAsync(user, isPersistent: true, GoogleDefaults.AuthenticationScheme);*/
+                    Response.Cookies.Append("Logged", "true");
+                    Redirect("https://localhost:8080");
+                    return new RedirectResult("https://localhost:8080");
+                }
+                return BadRequest($"Email claim not received from {userInfo.LoginProvider}");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExternalLogout()
+        {
+
+            var provider = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.AuthenticationMethod).Value;
+            var redirectUrl = Url.Action(nameof(ExternalLogoutCallback), "Account");
+            var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            return new ChallengeResult(properties);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExternalLogoutCallback()
+        {
+            var userInfo = await signInManager.GetExternalLoginInfoAsync();
+            if (userInfo.LoginProvider == "Google") signInManager.AuthenticationScheme = GoogleDefaults.AuthenticationScheme;
+            if (userInfo.LoginProvider == "Facebook") signInManager.AuthenticationScheme = FacebookDefaults.AuthenticationScheme;
+
+            var user = await userManager.FindByLoginAsync(userInfo.LoginProvider, userInfo.ProviderKey);
+            if (user == null) return BadRequest(ModelState);
+            var result = await userManager.RemoveLoginAsync(user, userInfo.LoginProvider, userInfo.ProviderKey);
+            await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            Response.Cookies.Delete("Logged");
+            if (!result.Succeeded) return new BadRequestResult();
+            return new RedirectResult("https://localhost:8080");
         }
 
         [HttpGet]
@@ -76,7 +170,7 @@ namespace GoodBadHabitsTracker.API.Controllers
                     {
                         user = new ApplicationUser
                         {
-                            UserName = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
+                            UserName = userInfo.Principal.FindFirstValue(ClaimTypes.Name),
                             Email = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
                             ImageUrl = userInfo.Principal.FindFirst(claim => claim.Type == "image").Value
                         };
@@ -127,7 +221,7 @@ namespace GoodBadHabitsTracker.API.Controllers
             signInManager.AuthenticationScheme = FacebookDefaults.AuthenticationScheme;
             var userInfo = await signInManager.GetExternalLoginInfoAsync();
             if (userInfo == null) return BadRequest(ModelState);
-            
+
             var result = await signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: false, bypassTwoFactor: true);
             if (result.Succeeded) return new RedirectResult("https://localhost:8080");
             else
@@ -141,13 +235,13 @@ namespace GoodBadHabitsTracker.API.Controllers
                     {
                         user = new ApplicationUser
                         {
-                            UserName = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
+                            UserName = userInfo.Principal.FindFirstValue(ClaimTypes.Name),
                             Email = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
                             ImageUrl = $"https://graph.facebook.com/{identifier}/picturetype=album"
-                    };
+                        };
                         await userManager.CreateAsync(user);
-                        
-                        
+
+
                     }
                     await userManager.AddLoginAsync(user, userInfo);
                     Response.Cookies.Append("Logged", "true");
@@ -183,8 +277,8 @@ namespace GoodBadHabitsTracker.API.Controllers
         [HttpGet]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            Response.Cookies.Delete("Logged");
+            await HttpContext.SignOutAsync();
+
             return new OkResult();
         }
 

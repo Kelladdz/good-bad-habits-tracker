@@ -45,7 +45,7 @@ export default function Login() {
 	};
 
 	const googleLogin = res => {
-		window.open('https://localhost:7154/API/Account/GoogleLogin?provider=Google', '_self');
+		window.open('https://localhost:7154/API/Account/ExternalLogin?provider=Google', '_self');
 		// const response = await axios
 		// 	// .post('https://localhost:7154/API/Account/GoogleLogin', {
 		// 	// 	imageUrl,
@@ -63,14 +63,14 @@ export default function Login() {
 		// 	.catch(err => {
 		// 		console.log(err);
 		// 		if (err.response.status === 400) console.log('400');
-		// 	});
+		// 	})
 		console.log(res.profileObj);
 		console.log(res);
 	};
 
 	const facebookLogin = res => {
 		console.log(res);
-		window.open('https://localhost:7154/API/Account/FacebookLogin?provider=Facebook', '_self');
+		window.open('https://localhost:7154/API/Account/ExternalLogin?provider=Facebook', '_self');
 	};
 
 	const handleSubmit = event => {

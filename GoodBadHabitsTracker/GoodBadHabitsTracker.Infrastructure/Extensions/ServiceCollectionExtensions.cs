@@ -29,6 +29,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
             services.AddDbContext<HabitsDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("Default")));
             services.AddScoped<IHabitsRepository, HabitsRepository>();
+            services.AddScoped<IUsersRepository, UsersRepository>();
             services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
             {
                 options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+/ ";
@@ -74,7 +75,6 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                     options.Scope.Add("email");
                     options.Scope.Add("profile");
                     options.ClaimActions.MapJsonKey("image", "picture");
-                    options.SignInScheme = IdentityConstants.ExternalScheme;
                 }).
                 AddFacebook(options =>
                 {

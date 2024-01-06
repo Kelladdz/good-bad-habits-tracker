@@ -16,6 +16,7 @@ function App() {
 	const [registerErrors, setRegisterErrors] = useState({});
 	const [loginErrors, setLoginErrors] = useState('');
 	const [forgetPasswordErrors, setForgetPasswordErrors] = useState('');
+	const [loginProvider, setLoginProvider] = useState('');
 
 	const { navigate } = useNavigation();
 
@@ -48,7 +49,7 @@ function App() {
 				<RegisterPage />
 			</Route>
 			<Route path='/all-habits'>
-				<MainContentPage onLogout={logout} />
+				<MainContentPage />
 			</Route>
 			<Route path='/forget-password'>
 				<ForgetPasswordPage />

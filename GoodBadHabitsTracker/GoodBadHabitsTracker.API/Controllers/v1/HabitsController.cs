@@ -12,6 +12,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
 {
     [ApiVersion("1.0")]
     [ApiController]
+    [Route("[controller]")]
     [Authorize]
     public class HabitsController(IHabitsService habitsService, IMapper mapper, IUserAccessor userAccessor) : CustomControllerBase
     {
@@ -19,7 +20,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         /// To get list of habits from "Habits" table.
         /// </summary>
         /// <returns></returns>
-        [HttpGet("habits")]
+        [HttpGet]
         
         public async Task<IActionResult> GetHabits(string? term, DateOnly date, int page = 1, int limit = 10)
         {
@@ -33,7 +34,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         /// </summary>
         /// <param name="habitId"></param>
         /// <returns></returns>
-        [HttpGet("habits/{habitId}")]
+        [HttpGet("{habitId}")]
         public async Task<ActionResult<Habit>> GetHabitById(Guid habitId)
         {
             var habit = await habitsService.GetHabitById(habitId);
@@ -45,7 +46,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         /// </summary>
         /// <param name="habitDto"></param>
         /// <returns></returns>
-        [HttpPost("habits")]
+        [HttpPost]
         public async Task<IActionResult> Create([FromBody] HabitDto habitDto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -60,7 +61,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         /// <param name="habitDto"></param>
         /// <param name="habitId"></param>
         /// <returns></returns>
-        [HttpPut("habits/{habitId}")]
+        [HttpPut("{habitId}")]
         public async Task<IActionResult> Edit([FromBody] HabitDto habitDto, Guid habitId)
         {
             var habitResponse = await habitsService.GetHabitById(habitId);
@@ -73,7 +74,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         /// </summary>
         /// <param name="habitId"></param>
         /// <returns></returns>
-        [HttpDelete("habits/{habitId}")]
+        [HttpDelete("{habitId}")]
         public async Task<IActionResult> Delete(Guid habitId)
         {
             var habitResponse = await habitsService.GetHabitById(habitId);
@@ -87,7 +88,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         /// To delete all habits from database.
         /// </summary>
         /// <returns></returns>
-        [HttpDelete("habits")]
+        [HttpDelete]
         public async Task<IActionResult> DeleteAll()
         {
             var userId = userAccessor.GetLoggedUserId();

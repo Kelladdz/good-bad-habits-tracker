@@ -4,6 +4,7 @@ import App from './App.jsx';
 import { NavigationProvider } from './context/navigation.jsx';
 import './index.css';
 import { CookiesProvider } from 'react-cookie';
+import LoginProvProvider from './context/loginProvider.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
 	<StrictMode>
