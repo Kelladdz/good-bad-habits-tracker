@@ -20,7 +20,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
     [Route("api/[controller]")]  
     [ApiVersion("1.0")]
     [ApiController]
-    public class AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender, IUserAccessor userAccessor, IUserService userService) : ControllerBase
+    public class AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender) : ControllerBase
     {
         [HttpPost("register")]
         public async Task<IActionResult> Register
@@ -42,7 +42,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
 
                 emailSender.SendWelcomeMessageAsync(user, user.Email);
 
-                return new CreatedAtRouteResult("GetUserById", new { userId = user.Id }, user);
+                return CreatedAtRoute("GetUserById", new { userId = user.Id }, user);
             }
             catch (Exception ex)
             {
@@ -63,7 +63,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                 if (request == null) throw new NullReferenceException(nameof(request));
                 if (!ModelState.IsValid) throw new ArgumentException(nameof(request));
                 var user = await userManager.FindByEmailAsync(request.Email);
-                if (user == null) throw new ArgumentException
+                if (user == null) throw new ArgumentException("");
                 var userName = user.UserName;
 
                 signInManager.AuthenticationScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -76,7 +76,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             }
             catch (Exception ex)
             {
-
+                return Ok();
             }
         }
 

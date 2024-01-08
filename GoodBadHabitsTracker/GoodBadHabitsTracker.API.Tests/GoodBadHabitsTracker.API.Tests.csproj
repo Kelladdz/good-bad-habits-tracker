@@ -32,8 +32,4 @@
     <ProjectReference Include="..\GoodBadHabitsTracker.TestMisc\GoodBadHabitsTracker.TestMisc.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\v1\" />
-  </ItemGroup>
-
 </Project>

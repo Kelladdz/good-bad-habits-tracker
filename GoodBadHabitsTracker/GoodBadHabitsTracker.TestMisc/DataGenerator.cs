@@ -21,7 +21,7 @@ namespace GoodBadHabitsTracker.TestMisc
             "friday",
             "saturday",
             "sunday"];
-        public IEnumerable<Habit> SeedCollection(int number)
+        public IEnumerable<Habit> SeedHabitsCollection(int number)
         {
             var habitsGenerator = new Faker<Habit>()
                 .RuleFor(h => h.HabitId, f => Guid.NewGuid())
@@ -40,7 +40,7 @@ namespace GoodBadHabitsTracker.TestMisc
             IEnumerable<Habit> habits = habitsGenerator.Generate(number);
             return habits;
         }
-        public Habit Seed()
+        public Habit SeedHabit()
         {
             var habitsGenerator = new Faker<Habit>()
                 .RuleFor(h => h.HabitId, f => Guid.NewGuid())
@@ -59,7 +59,7 @@ namespace GoodBadHabitsTracker.TestMisc
             Habit habit = habitsGenerator.Generate();
             return habit;
         }
-        public HabitDto SeedDto()
+        public HabitDto SeedHabitDto()
         {
             var habitsGenerator = new Faker<HabitDto>()
                 .RuleFor(h => h.Name, f => f.Name.JobTitle())
@@ -75,6 +75,17 @@ namespace GoodBadHabitsTracker.TestMisc
 
             HabitDto habitDto = habitsGenerator.Generate();
             return habitDto;
+        }
+        public RegisterDto SeedRegisterDto()
+        {
+            var registerDtoGenerator = new Faker<RegisterDto>()
+                .RuleFor(r => r.Name, f => f.Internet.UserName())
+                .RuleFor(r => r.Email, f => f.Internet.Email())
+                .RuleFor(r => r.Password, f => f.Internet.Password())
+                .RuleFor(r => r.ConfirmPassword, (f, r) => r.Password);
+
+            RegisterDto registerDto = registerDtoGenerator.Generate();
+            return registerDto;
         }
 
     }
