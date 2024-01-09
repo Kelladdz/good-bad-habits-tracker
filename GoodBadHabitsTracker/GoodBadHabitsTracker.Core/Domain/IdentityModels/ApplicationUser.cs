@@ -16,7 +16,7 @@ namespace GoodBadHabitsTracker.Core.Domain.IdentityModels
         public ICollection<Habit>? HabitsList { get; set; } = new List<Habit>();
         public string? ImageUrl { get; set; } //google: imageUrl
         public string? DisplayName { get; set; } //google: name
-        
+        [EmailAddress(ErrorMessage = "This value should be a valid email")]
         public override string? Email { get; set; }
 
     }

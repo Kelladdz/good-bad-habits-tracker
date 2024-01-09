@@ -165,10 +165,10 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
         {
             //Arrange
 
-            var habitDto = _generator.SeedDto();
+            var habitDto = _generator.SeedHabitDto();
             _mapperMock.Setup(temp => temp.Map<Habit>(It.IsAny<HabitDto>())).Returns((HabitDto habitDto) =>
             {
-                var habit = _generator.Seed();
+                var habit = _generator.SeedHabit();
                 return habit;
             });
 
@@ -200,8 +200,8 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
         public async Task Edit_HabitExists_ReturnObject()
         {
             //Arrange
-            Habit habit = _generator.Seed();
-            HabitDto habitDto = _generator.SeedDto();
+            Habit habit = _generator.SeedHabit();
+            HabitDto habitDto = _generator.SeedHabitDto();
 
             //Act
             var action = await _habitsService.Edit(habit, habitDto);
@@ -228,7 +228,7 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
         public async Task Delete_HabitExists_ReturnNothing()
         {
             //Arrange
-            Habit habit = _generator.Seed();
+            Habit habit = _generator.SeedHabit();
 
             //Act //Assert
             Func<Task> action = async () => await _habitsService.Delete(habit);
@@ -241,7 +241,7 @@ namespace GoodBadHabitsTracker.Core.Tests.Services
         public async Task DeleteAll_ReturnNothing()
         {
             //Arrange
-            IEnumerable<Habit> habits = _generator.SeedCollection(10);
+            IEnumerable<Habit> habits = _generator.SeedHabitsCollection(10);
             var userId = Guid.NewGuid();
 
             //Act //Assert

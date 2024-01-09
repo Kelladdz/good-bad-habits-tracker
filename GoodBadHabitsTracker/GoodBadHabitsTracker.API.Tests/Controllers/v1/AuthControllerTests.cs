@@ -21,6 +21,10 @@ using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 using FluentAssertions;
+using GoodBadHabitsTracker.Core.DTOs;
+using Google.Apis.Util;
+using GoodBadHabitsTracker.API.Exceptions;
+using System.Web.Http.Results;
 
 namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
 {
@@ -38,7 +42,6 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
         private readonly ITestOutputHelper _testOutputHelper;
         public AuthControllerTests(ITestOutputHelper testOutputHelper)
         {
-            //Fill this constructor with mocks
             _userManagerMock = new Mock<UserManager<ApplicationUser>>(
                 Mock.Of<IUserStore<ApplicationUser>>(), 
                 Mock.Of<IOptions<IdentityOptions>>(), 
@@ -91,6 +94,93 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
             routeName.Should().Be("GetUserById");
             routeValues["userId"].Should().BeAssignableTo<Guid>();
             value.Should().BeAssignableTo<ApplicationUser>();            
+        }
+
+        [Fact]
+        public async Task Register_NullRequest_ReturnsBadRequest()
+        {
+            //Arrange
+            RegisterDto request = null;
+            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender);
+            
+
+            //Act
+            Func<Task> action = async () => await controller.Register(request);
+            var result = await controller.Register(request) as BadRequestObjectResult;
+
+            // Assert
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<ArgumentNullException>().WithParameterName("message");
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeAssignableTo<string>();
+        }
+
+        [Fact]
+        public async Task Register_InvalidRequest_ReturnsBadRequest()
+        {
+            //Arrange
+            var request = _dataGenerator.SeedRegisterDto();
+            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender);
+            controller.ModelState.AddModelError("Email", "Email address is not correct.");
+
+
+            //Act
+            Func<Task> action = async () => await controller.Register(request);
+            var result = await controller.Register(request) as BadRequestObjectResult;
+            
+
+
+            // Assert
+            controller.ModelState.ErrorCount.Should().BeGreaterThan(0);            
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<ArgumentNullException>().WithParameterName("message");
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+        }
+
+        [Fact]
+        public async Task Register_NameOrEmailExists_ReturnsConflict()
+        {
+            //Arrange
+            var request = _dataGenerator.SeedRegisterDto();
+            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender);
+            _userManagerMock.Setup(x => x.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+                .ReturnsAsync(IdentityResult.Failed(It.IsAny<IdentityError>()));
+            
+
+            //Act
+            Func<Task> action = async () => await controller.Register(request);
+            var result = await controller.Register(request)! as ConflictObjectResult;
+            
+
+            // Assert
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<ConflictException>();
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status409Conflict);
+            result.Value.Should().BeAssignableTo<string>();
+        }
+
+        [Fact]
+        public async Task Register_CatchesAnotherException_ReturnsInternalServerError()
+        {
+            //Arrange
+            var request = _dataGenerator.SeedRegisterDto();
+            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender);
+
+
+            //Act
+            Func<Task> action = async () => await controller.Register(request);
+            var result = await controller.Register(request)! as ObjectResult;
+
+
+            // Assert
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<Exception>();
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            result.Value.Should().BeAssignableTo<string>();
         }
     }
 }

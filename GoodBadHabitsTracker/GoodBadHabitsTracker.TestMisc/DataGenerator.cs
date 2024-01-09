@@ -87,6 +87,16 @@ namespace GoodBadHabitsTracker.TestMisc
             RegisterDto registerDto = registerDtoGenerator.Generate();
             return registerDto;
         }
+        public RegisterDto SeedInvalidEmailRegisterDto()
+        {
+            var registerDtoGenerator = new Faker<RegisterDto>()
+                .RuleFor(r => r.Name, f => f.Internet.UserName())
+                .RuleFor(r => r.Email, f => f.Lorem.Word())
+                .RuleFor(r => r.Password, f => f.Internet.Password())
+                .RuleFor(r => r.ConfirmPassword, (f, r) => r.Password);
 
+            RegisterDto registerDto = registerDtoGenerator.Generate();
+            return registerDto;
+        }
     }
 }

@@ -5,9 +5,9 @@ namespace GoodBadHabitsTracker.API.Exceptions
     public class ConflictException : Exception
     {
         public int StatusCode { get; }
-        public ConflictException(string message, int statusCode) : base(message)
+        public ConflictException(string message) : base(message)
         {
-            StatusCode = statusCode;
+
         }
     }
 

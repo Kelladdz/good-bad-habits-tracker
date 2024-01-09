@@ -28,7 +28,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         {
             try
             {
-                if (request == null) throw new NullReferenceException("RequestDto cannot be null.");
+                if (request == null) throw new ArgumentNullException("RequestDto cannot be null.");
                 if (!ModelState.IsValid) throw new ArgumentException("User data is invalid.");
 
                 var user = new ApplicationUser()
@@ -38,7 +38,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                 };
 
                 IdentityResult result = await userManager.CreateAsync(user, request.Password!);
-                if (!result.Succeeded) throw new ConflictException("This name or email exists.", StatusCodes.Status409Conflict);
+                if (!result.Succeeded) throw new ConflictException("This name or email exists.");
 
                 emailSender.SendWelcomeMessageAsync(user, user.Email);
 
@@ -46,7 +46,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             }
             catch (Exception ex)
             {
-                if (ex is NullReferenceException) return BadRequest(ex.Message);
+                if (ex is ArgumentNullException) return BadRequest(ex.Message);
                 if (ex is ArgumentException) return BadRequest(ex.Message);
                 if (ex is ConflictException) return Conflict(ex.Message);
                 else return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
@@ -60,7 +60,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         {
             try
             {
-                if (request == null) throw new NullReferenceException(nameof(request));
+                if (request == null) throw new ArgumentNullException(nameof(request));
                 if (!ModelState.IsValid) throw new ArgumentException(nameof(request));
                 var user = await userManager.FindByEmailAsync(request.Email);
                 if (user == null) throw new ArgumentException("");
