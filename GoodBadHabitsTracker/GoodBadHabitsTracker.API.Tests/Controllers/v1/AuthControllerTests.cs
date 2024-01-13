@@ -25,11 +25,29 @@ using GoodBadHabitsTracker.Core.DTOs;
 using Google.Apis.Util;
 using GoodBadHabitsTracker.API.Exceptions;
 using System.Web.Http.Results;
+using Microsoft.AspNetCore.Identity;
+using GoodBadHabitsTracker.Infrastructure.Persistance;
+using EntityFrameworkCoreMock;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Principal;
+using Serilog.Context;
+using HttpContextMoq;
+using HttpContextMoq.Extensions;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.Extensions.Primitives;
+using System.Security.Claims;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore.InMemory.Query.Internal;
+using System.Security.Authentication;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using System.Configuration;
+using Microsoft.Extensions.Configuration;
 
 namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
 {
     public class AuthControllerTests
     {
+        private readonly AuthController _authController;
         private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly Mock<SignInManager<ApplicationUser>> _signInManagerMock;
@@ -38,37 +56,80 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
         private readonly IWebHostEnvironment _environment;
         private readonly Mock<ICustomEmailSender<ApplicationUser>> _emailSenderMock;
         private readonly ICustomEmailSender<ApplicationUser> _emailSender;
+     
+        private readonly Mock<IUserStore<ApplicationUser>> _userStoreMock;
+        private readonly IUserStore<ApplicationUser> _userStore;
+        private readonly Mock<IOptions<IdentityOptions>> _identityOptionsMock;
+        private readonly IOptions<IdentityOptions> _identityOptions;
+
+        private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly Mock<IUserClaimsPrincipalFactory<ApplicationUser>> _userClaimsPrincipalFactoryMock;
+        private readonly IUserClaimsPrincipalFactory<ApplicationUser> _userClaimsPrincipalFactory;
+        private readonly Mock<ILogger<SignInManager<ApplicationUser>>> _signInManagerLoggerMock;
+        private readonly ILogger<SignInManager<ApplicationUser>> _signInManagerLogger;
+        private readonly Mock<IAuthenticationSchemeProvider> _authenticationSchemeProviderMock;
+        private readonly IAuthenticationSchemeProvider _authenticationSchemeProvider;
+        private readonly Mock<IUserConfirmation<ApplicationUser>> _userConfirmationMock;
+        private readonly IUserConfirmation<ApplicationUser> _userConfirmation;
+
         private readonly DataGenerator _dataGenerator;
         private readonly ITestOutputHelper _testOutputHelper;
+
         public AuthControllerTests(ITestOutputHelper testOutputHelper)
         {
-            _userManagerMock = new Mock<UserManager<ApplicationUser>>(
-                Mock.Of<IUserStore<ApplicationUser>>(), 
-                Mock.Of<IOptions<IdentityOptions>>(), 
-                Mock.Of<IPasswordHasher<ApplicationUser>>(),
-                new IUserValidator<ApplicationUser>[0],
-                new IPasswordValidator<ApplicationUser>[0],
-                Mock.Of<ILookupNormalizer>(),
-                Mock.Of<IdentityErrorDescriber>(),
-                Mock.Of<IServiceProvider>(),
-                Mock.Of<ILogger<UserManager<ApplicationUser>>>());
-            _userManager = _userManagerMock.Object;
-            _signInManagerMock = new Mock<SignInManager<ApplicationUser>>(
-                _userManager,
-                Mock.Of<IHttpContextAccessor>(),
-                Mock.Of<IUserClaimsPrincipalFactory<ApplicationUser>>(),
-                Mock.Of<IOptions<IdentityOptions>>(),
-                Mock.Of<ILogger<SignInManager<ApplicationUser>>>(),
-                Mock.Of<IAuthenticationSchemeProvider>(),
-                Mock.Of<IUserConfirmation<ApplicationUser>>());
-            _signInManager = _signInManagerMock.Object;
             _environmentMock = new Mock<IWebHostEnvironment>();
             _environment = _environmentMock.Object;
             _emailSenderMock = new Mock<ICustomEmailSender<ApplicationUser>>();
             _emailSender = _emailSenderMock.Object;
             _dataGenerator = new DataGenerator();
-            _testOutputHelper = testOutputHelper;
+            _authController = new AuthController(_userManager, _signInManager, _environment, _emailSender);
             
+            _userStoreMock = new Mock<IUserStore<ApplicationUser>>();
+            _userStore = _userStoreMock.Object;
+            _userManagerMock = new Mock<UserManager<ApplicationUser>>(_userStore, null, null, null, null, null, null, null, null);
+            _userManager = _userManagerMock.Object;
+
+            _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+            _httpContextAccessor = _httpContextAccessorMock.Object;
+            _userClaimsPrincipalFactoryMock = new Mock<IUserClaimsPrincipalFactory<ApplicationUser>>();
+            _userClaimsPrincipalFactory = _userClaimsPrincipalFactoryMock.Object;
+            _identityOptionsMock = new Mock<IOptions<IdentityOptions>>();
+            _identityOptions = _identityOptionsMock.Object;
+            _signInManagerLoggerMock = new Mock<ILogger<SignInManager<ApplicationUser>>>();
+            _signInManagerLogger = _signInManagerLoggerMock.Object;
+            _authenticationSchemeProviderMock = new Mock<IAuthenticationSchemeProvider>();
+            _authenticationSchemeProvider = _authenticationSchemeProviderMock.Object;
+            _userConfirmationMock = new Mock<IUserConfirmation<ApplicationUser>>();
+            _userConfirmation = _userConfirmationMock.Object;
+            _signInManagerMock = new Mock<SignInManager<ApplicationUser>>(
+                _userManager, _httpContextAccessor, _userClaimsPrincipalFactory,
+                _identityOptions, _signInManagerLogger, _authenticationSchemeProvider,
+                _userConfirmation);
+            _signInManager = _signInManagerMock.Object;
+            
+            _testOutputHelper = testOutputHelper;
+                       
+            var services = new ServiceCollection();
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string>
+                {
+                    {"MailSettings:Email", "goodbadhabitstracker@gmail.com"},
+                    {"MailSettings:DisplayName", "GHBT"},
+                    {"MailSettings:Password", "gpig isdo ytzx shjy"},
+                    {"MailSettings:Host", "smtp.gmail.com"},
+                    {"MailSettings:Port", "587"}
+                }!).Build();
+            services.Configure<MailSettings>(configuration.GetSection("MailSettings"));
+
+            services.AddSingleton(_userManager);
+            services.AddSingleton(_signInManager);
+            services.AddSingleton(_environment);
+            services.TryAddTransient<ICustomEmailSender<ApplicationUser>, CustomEmailSender>();
+            services.AddTransient<AuthController>();
+
+            var serviceProvider = services.BuildServiceProvider();
+            _authController = serviceProvider.GetRequiredService<AuthController>();
         }
 
         [Fact]
@@ -83,7 +144,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
             //Act
             var result = await controller.Register(request) as CreatedAtRouteResult;
             _emailSenderMock.Setup(x => x.SendWelcomeMessageAsync(It.IsAny<ApplicationUser>(), "dobrestilomusic66@gmail.com"))
-                .Returns(Task.FromResult(result.Value as ApplicationUser));
+                .Returns(Task.CompletedTask);
             var routeName = result.RouteName;
             var routeValues = result.RouteValues;
             var value = result.Value;
@@ -92,7 +153,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
             result.Should().NotBeNull();
             result.StatusCode.Should().Be(StatusCodes.Status201Created);
             routeName.Should().Be("GetUserById");
-            routeValues["userId"].Should().BeAssignableTo<Guid>();
+            routeValues["userId"].Should().BeAssignableTo<string>();
             value.Should().BeAssignableTo<ApplicationUser>();            
         }
 
@@ -151,7 +212,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
 
             //Act
             Func<Task> action = async () => await controller.Register(request);
-            var result = await controller.Register(request)! as ConflictObjectResult;
+            var result = await controller.Register(request) as ConflictObjectResult;
             
 
             // Assert
@@ -175,7 +236,111 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
             var result = await controller.Register(request)! as ObjectResult;
 
 
-            // Assert
+            //Assert
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<Exception>();
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            result.Value.Should().BeAssignableTo<string>();
+        }
+
+        [Fact]
+        public async Task Login_ValidCredentials_ReturnsOk()
+        {
+            //Arrange
+            var request = _dataGenerator.SeedLoginDto();
+            _userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>()))
+                 .ReturnsAsync(new ApplicationUser {Email = request.Email });
+            _signInManagerMock.Setup(x => x.PasswordSignInAsync(It.IsAny<ApplicationUser>(),
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>())).ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Success);
+
+            //Act
+            var result = await _authController.Login(request) as OkObjectResult;
+                     
+            //Assert
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status200OK);
+            var value = result.Value.Should().BeAssignableTo<object>().Subject;
+            var properties = value.GetType().GetProperties();
+            properties.Should().HaveCount(2);
+            properties.All(p => p.PropertyType == typeof(string)).Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Login_NullRequest_ReturnsBadRequest()
+        {
+            //Arrange
+            LoginDto request = null;
+
+            //Act
+            Func<Task> action = async () => await _authController.Login(request);
+            var result = await _authController.Login(request) as BadRequestObjectResult;
+
+            //Assert
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<ArgumentNullException>().WithParameterName("message");
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeAssignableTo<string>();
+        }
+
+        [Fact]
+        public async Task Login_CantFindUser_ReturnsUnauthorized()
+        {
+            //Arrange
+            LoginDto request = _dataGenerator.SeedLoginDto();
+            ApplicationUser response = null;
+            _userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>()))
+                 .ReturnsAsync(response);
+            //Act
+            Func<Task> action = async () => await _authController.Login(request);
+            var result = await _authController.Login(request) as UnauthorizedObjectResult;
+
+            //Assert
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<InvalidCredentialException>().WithMessage("Invalid email or password");
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
+            result.Value.Should().BeAssignableTo<string>();
+        }
+
+        [Fact]
+        public async Task Login_PasswordSignInAsyncFailed_ReturnsUnauthorized()
+        {
+            //Arrange
+            LoginDto request = _dataGenerator.SeedLoginDto();
+            _userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>()))
+                 .ReturnsAsync(new ApplicationUser { Email = request.Email });
+            _signInManagerMock.Setup(x => x.PasswordSignInAsync(It.IsAny<ApplicationUser>(),
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>())).ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Failed);
+            //Act
+            Func<Task> action = async () => await _authController.Login(request);
+            var result = await _authController.Login(request) as UnauthorizedObjectResult;
+
+            //Assert
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<InvalidCredentialException>().WithMessage("Invalid email or password");
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
+            result.Value.Should().BeAssignableTo<string>();
+        }
+
+        [Fact]
+        public async Task Login_CatchesAnotherException_ReturnsInternalServerError()
+        {
+            //Arrange
+            var request = _dataGenerator.SeedLoginDto();
+            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender);
+            _userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>()))
+                 .ThrowsAsync(new Exception());
+           
+
+            //Act
+            Func<Task> action = async () => await controller.Login(request);
+            var result = await controller.Login(request)! as ObjectResult;
+
+
+            //Assert
             action.Should().NotBeNull();
             action.Should().ThrowAsync<Exception>();
             result.Should().NotBeNull();

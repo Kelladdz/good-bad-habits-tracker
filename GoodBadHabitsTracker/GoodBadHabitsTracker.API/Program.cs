@@ -52,7 +52,17 @@ app.UseRouting();
 app.UseCors();
 
 app.UseAuthentication();
-
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity.IsAuthenticated)
+    {
+        context.Response.Redirect("https://localhost:8080");
+    }
+    else
+    {
+        await next.Invoke();
+    }
+});
 app.UseAuthorization();
 
 app.Run();

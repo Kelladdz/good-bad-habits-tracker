@@ -25,7 +25,7 @@ export default function Login() {
 		let errorData = '';
 		const response = await axios
 			.post(
-				'https://localhost:7154/API/Account/Login',
+				'https://localhost:7154/api/auth/login',
 				{
 					email,
 					password,
@@ -45,7 +45,7 @@ export default function Login() {
 	};
 
 	const googleLogin = res => {
-		window.open('https://localhost:7154/API/Account/ExternalLogin?provider=Google', '_self');
+		window.open('https://localhost:7154/api/auth/external-login?provider=Google', '_self');
 		// const response = await axios
 		// 	// .post('https://localhost:7154/API/Account/GoogleLogin', {
 		// 	// 	imageUrl,
@@ -70,7 +70,7 @@ export default function Login() {
 
 	const facebookLogin = res => {
 		console.log(res);
-		window.open('https://localhost:7154/API/Account/ExternalLogin?provider=Facebook', '_self');
+		window.open('hhttps://localhost:7154/api/auth/external-login?provider=Facebook', '_self');
 	};
 
 	const handleSubmit = event => {
@@ -95,7 +95,7 @@ export default function Login() {
 
 	useEffect(() => {
 		const userCookie = () => {
-			return Cookies.get('Logged');
+			return Cookies.get('ONSESS');
 		};
 		console.log(userCookie());
 		if (userCookie() !== undefined) {

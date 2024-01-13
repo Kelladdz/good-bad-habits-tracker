@@ -16,7 +16,7 @@ export default function ForgetPassword() {
 
 	const sendLinkForResetPassword = async email => {
 		const response = await axios
-			.post('https://localhost:7154/API/Account/ForgetPassword', {
+			.post('https://localhost:7154/api/auth/forget-password', {
 				email,
 			})
 			.then(res => {
@@ -38,9 +38,7 @@ export default function ForgetPassword() {
 		event.preventDefault();
 		setErrors(ForgetPasswordValidation(email));
 		setTimeout(() => {
-			if (
-				((Object.keys(errors).length === 0 || typeof Object.keys(errors) === undefined) && email.length !== 0) 
-			)
+			if ((Object.keys(errors).length === 0 || typeof Object.keys(errors) === undefined) && email.length !== 0)
 				sendLinkForResetPassword(email);
 		}, 1000);
 	};

@@ -27,7 +27,7 @@ export default function Register() {
 
 	const register = async (email, name, password, confirmPassword) => {
 		const response = await axios
-			.post('https://localhost:7154/API/Account/Register', {
+			.post('https://localhost:7154/api/auth/register', {
 				email,
 				name,
 				password,

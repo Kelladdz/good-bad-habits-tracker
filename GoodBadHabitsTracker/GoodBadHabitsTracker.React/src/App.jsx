@@ -20,20 +20,20 @@ function App() {
 
 	const { navigate } = useNavigation();
 
-	const googleLogin = async res => {
-		const email = res.profileObj.email;
-		const password = '';
-		const response = await axios.post('https://localhost:7154/API/Account/LoginGoogle', {
-			email,
-			password,
-		});
-		console.log(res.profileObj);
-		console.log(res.data);
-	};
+	// const googleLogin = async res => {
+	// 	const email = res.profileObj.email;
+	// 	const password = '';
+	// 	const response = await axios.post('https://localhost:7154/API/Account/LoginGoogle', {
+	// 		email,
+	// 		password,
+	// 	});
+	// 	console.log(res.profileObj);
+	// 	console.log(res.data);
+	// };
 
-	const logout = () => {
-		window.open('https://localhost:7154/API/Account/GoogleLogout?provider=Google', '_self');
-	};
+	// const logout = () => {
+	// 	window.open('https://localhost:7154/API/Account/GoogleLogout?provider=Google', '_self');
+	// };
 
 	return (
 		<>

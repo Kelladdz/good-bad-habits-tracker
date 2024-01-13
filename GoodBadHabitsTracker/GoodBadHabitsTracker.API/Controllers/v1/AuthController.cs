@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Authentication;
 using System.Security.Claims;
 
 
@@ -20,15 +21,27 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
     [Route("api/[controller]")]  
     [ApiVersion("1.0")]
     [ApiController]
-    public class AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender) : ControllerBase
+    public class AuthController : ControllerBase
     {
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly IWebHostEnvironment _environment;
+        private readonly ICustomEmailSender<ApplicationUser> _emailSender;
+
+        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender)
+        {
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _environment = environment;
+            _emailSender = emailSender;
+        }
         [HttpPost("register")]
         public async Task<IActionResult> Register
             ([FromBody] RegisterDto request)
         {
             try
             {
-                if (request == null) throw new ArgumentNullException("RequestDto cannot be null.");
+                if (request == null) throw new ArgumentNullException("Request cannot be null.");
                 if (!ModelState.IsValid) throw new ArgumentException("User data is invalid.");
 
                 var user = new ApplicationUser()
@@ -37,12 +50,12 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                     UserName = request.Name,
                 };
 
-                IdentityResult result = await userManager.CreateAsync(user, request.Password!);
+                IdentityResult result = await _userManager.CreateAsync(user, request.Password!);
                 if (!result.Succeeded) throw new ConflictException("This name or email exists.");
 
-                emailSender.SendWelcomeMessageAsync(user, user.Email);
+                await _emailSender.SendWelcomeMessageAsync(user, user.Email);
 
-                return CreatedAtRoute("GetUserById", new { userId = user.Id }, user);
+                return CreatedAtRoute("GetUserById", new { userId = user.UserName }, user);
             }
             catch (Exception ex)
             {
@@ -60,41 +73,46 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         {
             try
             {
-                if (request == null) throw new ArgumentNullException(nameof(request));
-                if (!ModelState.IsValid) throw new ArgumentException(nameof(request));
-                var user = await userManager.FindByEmailAsync(request.Email);
-                if (user == null) throw new ArgumentException("");
-                var userName = user.UserName;
+                if (request == null) throw new ArgumentNullException("Request cannot be null.");
 
-                signInManager.AuthenticationScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                var user = await _userManager.FindByEmailAsync(request.Email);
+                if (user == null) throw new InvalidCredentialException("Invalid email or password");
+                _signInManager.AuthenticationScheme = "CookiesAuth";
+                var result = await _signInManager.PasswordSignInAsync(user, request.Password, isPersistent: true, lockoutOnFailure: false);
+                if (!result.Succeeded) throw new InvalidCredentialException("Invalid email or password");
+                /*var userName = user.UserName;
+
+                signInManager.AuthenticationScheme = "CookiesAuth";
                 var result = await signInManager.PasswordSignInAsync(userName, request.Password, isPersistent: true, lockoutOnFailure: false);
-                if (!result.Succeeded) return new UnauthorizedResult();
+                if (!result.Succeeded) throw new InvalidCredentialException("Invalid email or password");*/
 
-                Response.Cookies.Append("Logged", "true");
-
-                return new OkResult();
+                return Ok(new {user.UserName, user.Email});
             }
             catch (Exception ex)
             {
-                return Ok();
+                if (ex is ArgumentNullException) return BadRequest(ex.Message);
+                if (ex is InvalidCredentialException) return Unauthorized(ex.Message);
+                else return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
+            
+
         }
 
         [HttpGet("external-login")]
         public IActionResult ExternalLogin([FromQuery] string provider)
         {
-            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account");
-            var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Auth");
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
             return new ChallengeResult(provider, properties);
         }
 
-        [HttpPost("external-login")]
+        [HttpGet("external-login-callback")]
         public async Task<IActionResult> ExternalLoginCallback()
         {
-            var userInfo = await signInManager.GetExternalLoginInfoAsync();
+            var userInfo = await _signInManager.GetExternalLoginInfoAsync();
             if (userInfo == null) return BadRequest(ModelState);
 
-            var result = await signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+            var result = await _signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: false, bypassTwoFactor: true);
             if (result.Succeeded)
             {
                 Response.Cookies.Append("Logged", "true");
@@ -106,7 +124,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                 var email = userInfo.Principal.FindFirstValue(ClaimTypes.Email);
                 if (email != null)
                 {
-                    var user = await userManager.FindByEmailAsync(email);
+                    var user = await _userManager.FindByEmailAsync(email);
                     if (user == null)
                     {
                         if (userInfo.LoginProvider == "Google")
@@ -128,11 +146,11 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                                 ImageUrl = $"https://graph.facebook.com/{identifier}/picturetype=album"
                             };
                         }
-                        await userManager.CreateAsync(user);
-                        await userManager.AddClaimAsync(user, new Claim("loginProvider", userInfo.LoginProvider));
+                        await _userManager.CreateAsync(user);
+                        await _userManager.AddClaimAsync(user, new Claim("loginProvider", userInfo.LoginProvider));
                     }
-                    await userManager.AddLoginAsync(user, userInfo);
-                    await signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: true, bypassTwoFactor: true);
+                    await _userManager.AddLoginAsync(user, userInfo);
+                    await _signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: true, bypassTwoFactor: true);
                     /*await signInManager.SignInAsync(user, isPersistent: true, GoogleDefaults.AuthenticationScheme);*/
                     Response.Cookies.Append("Logged", "true");
                     Redirect("https://localhost:8080");
@@ -147,21 +165,22 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         {
 
             var provider = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.AuthenticationMethod).Value;
-            var redirectUrl = Url.Action(nameof(ExternalLogoutCallback), "Account");
-            var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            if (provider == null) return NoContent();
+            var redirectUrl = Url.Action(nameof(ExternalLogoutCallback), "Auth");
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
             return new ChallengeResult(properties);
         }
 
-        [HttpPost("external-logout")]
+        [HttpGet("external-logout-callback")]
         public async Task<IActionResult> ExternalLogoutCallback()
         {
-            var userInfo = await signInManager.GetExternalLoginInfoAsync();
-            if (userInfo.LoginProvider == "Google") signInManager.AuthenticationScheme = GoogleDefaults.AuthenticationScheme;
-            if (userInfo.LoginProvider == "Facebook") signInManager.AuthenticationScheme = FacebookDefaults.AuthenticationScheme;
+            var userInfo = await _signInManager.GetExternalLoginInfoAsync();
+            if (userInfo.LoginProvider == "Google") _signInManager.AuthenticationScheme = GoogleDefaults.AuthenticationScheme;
+            if (userInfo.LoginProvider == "Facebook") _signInManager.AuthenticationScheme = FacebookDefaults.AuthenticationScheme;
 
-            var user = await userManager.FindByLoginAsync(userInfo.LoginProvider, userInfo.ProviderKey);
+            var user = await _userManager.FindByLoginAsync(userInfo.LoginProvider, userInfo.ProviderKey);
             if (user == null) return BadRequest(ModelState);
-            var result = await userManager.RemoveLoginAsync(user, userInfo.LoginProvider, userInfo.ProviderKey);
+            var result = await _userManager.RemoveLoginAsync(user, userInfo.LoginProvider, userInfo.ProviderKey);
             await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
             Response.Cookies.Delete("Logged");
             if (!result.Succeeded) return new BadRequestResult();
@@ -301,8 +320,8 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         [HttpGet("logout")]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync();
-
+            await HttpContext.SignOutAsync("CookiesAuth");
+            Response.Cookies.Delete("Logged");
             return new OkResult();
         }
 
@@ -311,11 +330,11 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         public async Task<IActionResult> ForgetPassword([FromBody] ForgetPasswordDto request)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            var user = await userManager.FindByEmailAsync(request.Email);
+            var user = await _userManager.FindByEmailAsync(request.Email);
             if (user == null) return new NotFoundResult();
-            var token = await userManager.GeneratePasswordResetTokenAsync(user);
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var link = Url.Action("ResetPassword", "Account", new { token, email = user.Email }, Request.Scheme)!;
-            await emailSender.SendPasswordResetLinkAsync(user, user.Email, link, token);
+            await _emailSender.SendPasswordResetLinkAsync(user, user.Email, link, token);
             return new OkResult();
         }
 
@@ -323,9 +342,9 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         [AllowAnonymous]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto request)
         {
-            var user = await userManager.FindByIdAsync(request.UserId);
+            var user = await _userManager.FindByIdAsync(request.UserId);
             if (user == null) return new BadRequestResult();
-            IdentityResult result = await userManager.ResetPasswordAsync(user, request.Token, request.Password);
+            IdentityResult result = await _userManager.ResetPasswordAsync(user, request.Token, request.Password);
             if (!result.Succeeded) return new UnauthorizedResult();
             return new OkResult();
         }
@@ -335,7 +354,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             var uploadedFiles = Request.Form.Files;
             try
             {
-                string filePath = environment.WebRootPath + "\\Uploads\\User\\" + userName;
+                string filePath = _environment.WebRootPath + "\\Uploads\\User\\" + userName;
 
                 if (!Directory.Exists(filePath)) Directory.CreateDirectory(filePath);
 

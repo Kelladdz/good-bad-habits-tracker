@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Filters;
@@ -21,7 +22,7 @@ namespace GoodBadHabitsTracker.API.Extensions
         {
             services.Configure<MailSettings>(configuration.GetSection("MailSettings"));
             services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
-            services.AddTransient<ICustomEmailSender<ApplicationUser>, CustomEmailSender>();
+            services.TryAddTransient<ICustomEmailSender<ApplicationUser>, CustomEmailSender>();
             services.AddControllers().AddNewtonsoftJson(options =>
             {
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;

@@ -43,23 +43,36 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                 .AddTokenProvider<DataProtectorTokenProvider<ApplicationUser>>(TokenOptions.DefaultProvider)
                 .AddUserStore<UserStore<ApplicationUser, ApplicationRole, HabitsDbContext, Guid>>()
                 .AddRoleStore<RoleStore<ApplicationRole, HabitsDbContext, Guid>>();
-            services.AddAuthentication(options =>
-            {
-                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-            })
-                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+            services.AddAuthentication()
+                .AddCookie("CookiesAuth", options =>
                 {
-                    options.Cookie.Name = "UserLoginCookie";
-                    options.SlidingExpiration = true;
-                    options.ExpireTimeSpan = new TimeSpan(2, 0, 0);
-                    options.Events.OnRedirectToLogin = (context) =>
-                    {
-                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                        return Task.CompletedTask;
-                    };
+                    options.Cookie.Name = "JSESSIONID";
                     options.Cookie.HttpOnly = true;
                     options.Cookie.SameSite = SameSiteMode.Lax;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                    options.Cookie.IsEssential = true;
+                    options.SlidingExpiration = true;
+                    options.ExpireTimeSpan = new TimeSpan(2, 0, 0);
+                    options.Events.OnSignedIn = (context) =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status200OK;
+                        context.Response.Cookies.Append("ONSESS", "true", new CookieOptions
+                        {
+                            HttpOnly = false,
+                            Secure = true,
+                            SameSite = SameSiteMode.Lax,
+                            IsEssential = true,
+                            Expires = DateTimeOffset.UtcNow.AddHours(2)
+                        });
+                        return Task.CompletedTask;
+                    }; 
+                    options.Events.OnSigningOut = (context) =>
+                    {
+                        context.Response.Cookies.Delete("JSESSIONID");
+                        context.Response.Cookies.Delete("ONSESS");
+                        return Task.CompletedTask;
+                    };
+
                 })
                 /*.AddOpenIdConnect("Google", options =>
                 {

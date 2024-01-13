@@ -14,15 +14,14 @@ export default function ResetPassword() {
 	const { navigate } = useNavigation();
 
 	const resetPassword = async (password, token, userId) => {
-		const response = await axios.put('https://localhost:7154/API/Account/ResetPassword', {
-			password,
-			token,
-			userId,
-		})
-		.then(navigate('/signin'));
-
+		const response = await axios
+			.put('https://localhost:7154/api/auth/reset-password', {
+				password,
+				token,
+				userId,
+			})
+			.then(navigate('/signin'));
 	};
-
 
 	const handleChangePassword = event => setPassword(event.target.value);
 	const handleChangeConfirmPassword = event => setConfirmPassword(event.target.value);
