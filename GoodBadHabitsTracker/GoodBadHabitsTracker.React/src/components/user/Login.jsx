@@ -6,20 +6,20 @@ import Google from '../../assets/google.svg';
 import Facebook from '../../assets/facebook.svg';
 import { Button } from 'react-bootstrap';
 import Link from '../Link';
-import { useState, useEffect, useContext } from 'react';
-import { GoogleLogin, onFailure } from 'react-google-login';
+import { useState, useEffect } from 'react';
+import { GoogleLogin } from 'react-google-login';
 import FacebookLogin from 'react-facebook-login';
-import { gapi } from 'gapi-script';
 import useNavigation from '../../hooks/useNavigation';
 import Cookies from 'js-cookie';
+import { Pkce } from '../../utilities/oauth/pkce';
+import axios from 'axios';
 
 export default function Login() {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [loginErrors, setLoginErrors] = useState('');
+	const [cookie, setCookie] = useState(Cookies.get('ONSESS'));
 	const { navigate } = useNavigation();
-
-	const clientId = '238617088969-sbq9rl49dhr623f55j6ae2c5g32r6sqk.apps.googleusercontent.com';
 
 	const login = async (email, password) => {
 		let errorData = '';
@@ -44,8 +44,26 @@ export default function Login() {
 		setLoginErrors(errorData);
 	};
 
-	const googleLogin = res => {
-		window.open('https://localhost:7154/api/auth/external-login?provider=Google', '_self');
+	const googleLogin = async res => {
+		const clientId = 'cNRB11SQnB796najkgVTLftkwgkdtNL5';
+		const redirectUri = 'https://localhost:8080/callback';
+		const scope = 'openid+profile+email';
+		const stateParameter = Pkce.stateParameterGenerator();
+		console.log(stateParameter);
+		const codeVerifier = Pkce.codeVerifierGenerator();
+		console.log(codeVerifier);
+		localStorage.setItem('codeVerifier', codeVerifier);
+		const codeChallenge = await Pkce.codeChallengeGeneratorAsync(codeVerifier);
+		console.log(codeChallenge);
+
+		window.open(
+			`https://dev-d3sgzf7qkeuvnndt.eu.auth0.com/authorize?response_type=code&client_id=${clientId}&connection=google-oauth2&redirect_uri=${redirectUri}&scope=${scope}&state=${stateParameter}&code_challenge=${codeChallenge}&code_challenge_method=S256`,
+			'_blank',
+			'width=500,height=600'
+		);
+		// window.open(`https://localhost:7154/api/auth/external-login?provider=Google`);
+		// console.log(res);
+
 		// const response = await axios
 		// 	// .post('https://localhost:7154/API/Account/GoogleLogin', {
 		// 	// 	imageUrl,
@@ -64,13 +82,11 @@ export default function Login() {
 		// 		console.log(err);
 		// 		if (err.response.status === 400) console.log('400');
 		// 	})
-		console.log(res.profileObj);
-		console.log(res);
 	};
 
 	const facebookLogin = res => {
 		console.log(res);
-		window.open('hhttps://localhost:7154/api/auth/external-login?provider=Facebook', '_self');
+		window.open('https://localhost:7154/api/auth/external-login?provider=Facebook', '_blank');
 	};
 
 	const handleSubmit = event => {
@@ -84,16 +100,6 @@ export default function Login() {
 	}, [loginErrors]);
 
 	useEffect(() => {
-		function start() {
-			gapi.client.init({
-				clientId: clientId,
-				scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
-			});
-		}
-		gapi.load('client:auth2', start);
-	});
-
-	useEffect(() => {
 		const userCookie = () => {
 			return Cookies.get('ONSESS');
 		};
@@ -102,6 +108,38 @@ export default function Login() {
 			navigate('/all-habits');
 		}
 	});
+
+	useEffect(() => {
+		const checkCookie = () => {
+			const currentCookie = Cookies.get('ONSESS');
+			if (currentCookie !== cookie) {
+				setCookie(currentCookie);
+			}
+		};
+
+		// Sprawdzanie ciasteczka co sekundę
+		const intervalId = setInterval(checkCookie, 1000);
+
+		// Czyszczenie interwału po odmontowaniu komponentu
+		return () => clearInterval(intervalId);
+	}, [cookie]);
+
+	// useEffect(() => {
+	// 	google.accounts.id.initialize({
+	// 		client_id: '238617088969-sbq9rl49dhr623f55j6ae2c5g32r6sqk.apps.googleusercontent.com',
+	// 		callback: googleLogin,
+	// 		auto_select: true,
+	// 		ui_mode: 'card',
+	// 	});
+	// 	google.accounts.id.renderButton(document.getElementById('signInButton'), {
+	// 		theme: 'filled_black',
+	// 		size: 'large',
+	// 		type: 'standard',
+	// 		text: 'continue_with',
+	// 		shape: 'rectangular',
+	// 		prompt_parent_id: 'googleSignInButton',
+	// 	});
+	// }, []);
 
 	const handleChangeEmail = event => setEmail(event.target.value);
 	const handleChangePassword = event => setPassword(event.target.value);
@@ -150,23 +188,17 @@ export default function Login() {
 						<div className={css['line']}></div>
 					</div>
 					<div className={css['icons']}>
-						<div id='signInButton' className={css['sign-in-btn']}>
-							<GoogleLogin
-								clientId={clientId}
-								onSuccess={googleLogin}
-								onFailure={onFailure}
-								cookiePolicy={'single_host_origin'}
-							/>
+						<a href='#' className={css['sign-in-btn']} onClick={googleLogin}>
 							<img className={css['external-icon']} src={Google} />
-						</div>
+						</a>
 						<div id='signInButton' className={css['sign-in-btn']}>
-							<FacebookLogin
+							{/* <FacebookLogin
 								appId='326877753548738'
 								scope='email, public_profile'
 								autoLoad={false}
 								fields='name,email,picture'
 								callback={facebookLogin}
-							/>
+							/> */}
 
 							<a className={css['external-link']} style={{ paddingLeft: '3rem' }} href='#'>
 								<img className={css['external-icon']} src={Facebook} />

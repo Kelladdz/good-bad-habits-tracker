@@ -11,6 +11,7 @@ export default function MainContent() {
 		const response = await axios.get('https://localhost:7154/api/auth/logout', { withCredentials: true }).then(res => {
 			console.log(res);
 			if (res.status == 200) {
+				externalLogout();
 				navigate('/signin');
 			}
 			// if (res.status === 200) {

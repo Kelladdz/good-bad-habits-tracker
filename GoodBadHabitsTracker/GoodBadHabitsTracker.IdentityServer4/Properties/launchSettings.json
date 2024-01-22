@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "GoodBadHabitsTracker.IdentityServer4": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:63793;http://localhost:63794"
+    }
+  }
+}

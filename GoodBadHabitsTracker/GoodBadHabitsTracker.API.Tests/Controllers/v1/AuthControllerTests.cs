@@ -1,8 +1,6 @@
-﻿using Azure;
-using GoodBadHabitsTracker.API.Controllers.v1;
+﻿using GoodBadHabitsTracker.API.Controllers.v1;
 using GoodBadHabitsTracker.API.Services.EmailSender;
 using GoodBadHabitsTracker.Core.Domain.IdentityModels;
-using GoodBadHabitsTracker.Core.Services.UserAccessor;
 using GoodBadHabitsTracker.TestMisc;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -12,35 +10,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-using Serilog.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 using FluentAssertions;
 using GoodBadHabitsTracker.Core.DTOs;
-using Google.Apis.Util;
 using GoodBadHabitsTracker.API.Exceptions;
-using System.Web.Http.Results;
-using Microsoft.AspNetCore.Identity;
-using GoodBadHabitsTracker.Infrastructure.Persistance;
-using EntityFrameworkCoreMock;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Principal;
-using Serilog.Context;
-using HttpContextMoq;
-using HttpContextMoq.Extensions;
-using Microsoft.AspNetCore.Http.Features;
-using Microsoft.Extensions.Primitives;
-using System.Security.Claims;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.EntityFrameworkCore.InMemory.Query.Internal;
 using System.Security.Authentication;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using System.Configuration;
 using Microsoft.Extensions.Configuration;
 
 namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
@@ -347,5 +324,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
             result.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
             result.Value.Should().BeAssignableTo<string>();
         }
+
+        
     }
 }

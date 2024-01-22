@@ -34,11 +34,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-/*app.UseCookiePolicy(
-    new CookiePolicyOptions
-    {
-        Secure = CookieSecurePolicy.Always
-    });*/
+app.UseCookiePolicy();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -52,17 +48,9 @@ app.UseRouting();
 app.UseCors();
 
 app.UseAuthentication();
-app.Use(async (context, next) =>
-{
-    if (context.User.Identity.IsAuthenticated)
-    {
-        context.Response.Redirect("https://localhost:8080");
-    }
-    else
-    {
-        await next.Invoke();
-    }
-});
+
 app.UseAuthorization();
+
+
 
 app.Run();

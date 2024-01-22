@@ -2,6 +2,9 @@ import { defineConfig } from 'vite';
 import mkcert from 'vite-plugin-mkcert';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import dns from 'dns';
+
+dns.setDefaultResultOrder('verbatim');
 
 export default defineConfig({
 	server: {

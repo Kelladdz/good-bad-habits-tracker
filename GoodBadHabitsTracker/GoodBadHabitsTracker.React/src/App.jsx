@@ -10,7 +10,8 @@ import './App.css';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import useNavigation from './hooks/useNavigation';
-import ResetPassword from './components/user/ResetPassword';
+import Callback from './components/user/Callback';
+import {BrowserRouter as Router} from 'react-router-dom';
 
 function App() {
 	const [registerErrors, setRegisterErrors] = useState({});
@@ -36,12 +37,15 @@ function App() {
 	// };
 
 	return (
-		<>
+		<Router>
 			<Route path='/'>
 				<Home />
 			</Route>
 			<Route path='/signin'>
 				<LoginPage />
+			</Route>
+			<Route path='/callback'>
+				<Callback />
 			</Route>
 			<Route path='/signup'>
 				<RegisterPage />
@@ -55,7 +59,7 @@ function App() {
 			<Route path='/reset-password'>
 				<ResetPasswordPage />
 			</Route>
-		</>
+		</Router>
 	);
 }
 

@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GoodBadHabitsTracker.Core.T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GoodBadHabitsTracker.API.Tests", "GoodBadHabitsTracker.API.Tests\GoodBadHabitsTracker.API.Tests.csproj", "{325A1489-4FCB-456E-9A11-D0C83AF912FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoodBadHabitsTracker.TestMisc", "GoodBadHabitsTracker.TestMisc\GoodBadHabitsTracker.TestMisc.csproj", "{9315BC95-BD7B-4F8F-AD83-38E112A56057}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GoodBadHabitsTracker.TestMisc", "GoodBadHabitsTracker.TestMisc\GoodBadHabitsTracker.TestMisc.csproj", "{9315BC95-BD7B-4F8F-AD83-38E112A56057}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

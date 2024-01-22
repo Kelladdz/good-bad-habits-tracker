@@ -1,11 +1,14 @@
-﻿using GoodBadHabitsTracker.Core.Domain.IdentityModels;
+﻿using Azure.Core;
+using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.Domain.Interfaces;
+
 using GoodBadHabitsTracker.Infrastructure.Persistance;
 using GoodBadHabitsTracker.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
-
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -13,11 +16,15 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace GoodBadHabitsTracker.Infrastructure.Extensions
@@ -25,7 +32,11 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
     public static class ServiceCollectionExtensions
     {
         public static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
-        {       
+        {
+            services.Configure<CookiePolicyOptions>(options =>
+            {
+                options.MinimumSameSitePolicy = SameSiteMode.None;
+            });
             services.AddDbContext<HabitsDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("Default")));
             services.AddScoped<IHabitsRepository, HabitsRepository>();
@@ -59,8 +70,8 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                         context.Response.Cookies.Append("ONSESS", "true", new CookieOptions
                         {
                             HttpOnly = false,
-                            Secure = true,
-                            SameSite = SameSiteMode.Lax,
+                            Secure = false,
+                            SameSite = SameSiteMode.None,
                             IsEssential = true,
                             Expires = DateTimeOffset.UtcNow.AddHours(2)
                         });
@@ -86,9 +97,23 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                 {
                     options.ClientId = configuration.GetSection("web:client_id").Value;
                     options.ClientSecret = configuration.GetSection("web:client_secret").Value;
-                    options.Scope.Add("email");
-                    options.Scope.Add("profile");
+                    options.AuthorizationEndpoint = "https://localhost:7154/o/oauth2/v2/auth";
+                    options.AccessType = "online";
                     options.ClaimActions.MapJsonKey("image", "picture");
+                    options.SaveTokens = true;
+                    options.Events.OnTicketReceived = (context) =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status200OK;
+                        context.Response.Cookies.Append("ONSESS", "true", new CookieOptions
+                        {
+                            HttpOnly = false,
+                            Secure = false,
+                            SameSite = SameSiteMode.Lax,
+                            IsEssential = true,
+                            Expires = DateTimeOffset.UtcNow.AddHours(2)
+                        });
+                        return Task.CompletedTask;
+                    };
                 }).
                 AddFacebook(options =>
                 {
@@ -105,6 +130,8 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                 options.Scope.Add("profile");
                 options.ClaimActions.MapJsonKey("image", "picture");
             });*/
+            services.AddAuthorization();
+            
         }
     }
 }

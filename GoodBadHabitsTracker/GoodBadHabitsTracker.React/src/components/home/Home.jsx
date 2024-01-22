@@ -4,9 +4,10 @@ import Cookies from 'js-cookie';
 
 export default function Home() {
 	const { navigate } = useNavigation();
+	
 	useEffect(() => {
 		const userCookie = () => {
-			return Cookies.get('Logged');
+			return Cookies.get('ONSESS');
 		};
 		console.log(userCookie());
 		if (userCookie() === undefined) {

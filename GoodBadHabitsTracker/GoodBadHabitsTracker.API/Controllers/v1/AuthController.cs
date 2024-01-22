@@ -1,5 +1,7 @@
 ﻿using Asp.Versioning;
+using Auth0.AuthenticationApi.Models;
 using GoodBadHabitsTracker.API.Exceptions;
+using GoodBadHabitsTracker.API.Services;
 using GoodBadHabitsTracker.API.Services.EmailSender;
 using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.DTOs;
@@ -10,8 +12,10 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using System.Security.Authentication;
 using System.Security.Claims;
 
@@ -41,7 +45,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         {
             try
             {
-                if (request == null) throw new ArgumentNullException("Request cannot be null.");
+                if (request == null) throw new HttpRequestException("Request cannot be null.");
                 if (!ModelState.IsValid) throw new ArgumentException("User data is invalid.");
 
                 var user = new ApplicationUser()
@@ -59,12 +63,11 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             }
             catch (Exception ex)
             {
-                if (ex is ArgumentNullException) return BadRequest(ex.Message);
+                if (ex is HttpRequestException) return BadRequest(ex.Message);
                 if (ex is ArgumentException) return BadRequest(ex.Message);
                 if (ex is ConflictException) return Conflict(ex.Message);
                 else return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
-            
+            }            
         }
 
         [HttpPost("login")]
@@ -73,50 +76,132 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         {
             try
             {
-                if (request == null) throw new ArgumentNullException("Request cannot be null.");
+                if (request == null) throw new HttpRequestException("Request cannot be null.");
 
                 var user = await _userManager.FindByEmailAsync(request.Email);
                 if (user == null) throw new InvalidCredentialException("Invalid email or password");
+
                 _signInManager.AuthenticationScheme = "CookiesAuth";
                 var result = await _signInManager.PasswordSignInAsync(user, request.Password, isPersistent: true, lockoutOnFailure: false);
                 if (!result.Succeeded) throw new InvalidCredentialException("Invalid email or password");
-                /*var userName = user.UserName;
-
-                signInManager.AuthenticationScheme = "CookiesAuth";
-                var result = await signInManager.PasswordSignInAsync(userName, request.Password, isPersistent: true, lockoutOnFailure: false);
-                if (!result.Succeeded) throw new InvalidCredentialException("Invalid email or password");*/
 
                 return Ok(new {user.UserName, user.Email});
             }
             catch (Exception ex)
             {
-                if (ex is ArgumentNullException) return BadRequest(ex.Message);
+                if (ex is HttpRequestException) return BadRequest(ex.Message);
                 if (ex is InvalidCredentialException) return Unauthorized(ex.Message);
                 else return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
-            
-
         }
 
-        [HttpGet("external-login")]
-        public IActionResult ExternalLogin([FromQuery] string provider)
+        [HttpPost("external-login")]
+        public async Task<IActionResult> ExternalLogin([FromQuery] string provider)
         {
-            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Auth");
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
-            return new ChallengeResult(provider, properties);
-        }
+            try
+            {
+                if (provider == null || (provider != "Google" && provider != "Facebook")) throw new HttpRequestException("Provider is not correct.");
+
+                var idToken = Request.Headers["Authentication"].ToString();
+                if (idToken == null) throw new HttpRequestException("Id token cannot be null.");
+
+                var accessToken = Request.Headers["Authorization"].ToString();
+                if (accessToken == null) throw new HttpRequestException("Access token cannot be null.");
+
+                var tokenHandler = new IdTokenHandler();
+                var claimsPrincipal = tokenHandler.GetClaimsPrincipalFromIdToken(idToken);
+
+                var providerKey = claimsPrincipal.FindFirst(claim => claim.Type == "sub").Value;
+                if (providerKey == null) throw new InvalidOperationException("Provider key cannot be null.");
+
+                var userInfo = new ExternalLoginInfo(claimsPrincipal, provider, providerKey, provider);
+                if (userInfo == null) throw new ArgumentNullException("User info cannot be null.");
+                userInfo.AuthenticationTokens = new List<AuthenticationToken>()
+                {
+                    new AuthenticationToken(){ Name = "access_token", Value = accessToken},
+                };
+
+                
+                var result = await _signInManager.ExternalLoginSignInAsync(provider, providerKey, isPersistent: false, bypassTwoFactor: true);
+                if (result.Succeeded)
+                {
+                    var user = await _userManager.FindByLoginAsync(provider, providerKey);
+                    if (user == null) throw new ArgumentNullException("User cannot be null.");
+                    await _signInManager.UpdateExternalAuthenticationTokensAsync(userInfo);
+                    Response.Cookies.Append("ONSESS", "true", new CookieOptions
+                    {
+                        HttpOnly = false,
+                        Secure = true,
+                        SameSite = SameSiteMode.None,
+                        IsEssential = true,
+                        Expires = DateTimeOffset.UtcNow.AddHours(2)
+                    });
+                    return Ok();
+                }
+                else
+                {
+                    var email = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "email"))!.Value;
+                    if (email != null)
+                    {
+                        var user = await _userManager.FindByEmailAsync(email);
+                        if (user == null)
+                        {
+                            if (userInfo.LoginProvider == "Google")
+                            {
+                                user = new ApplicationUser
+                                {
+                                    UserName = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "name"))!.Value,
+                                    Email = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "email"))!.Value,
+                                    ImageUrl = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "picture"))!.Value
+                                };
+                            }
+                            if (userInfo.LoginProvider == "Facebook")
+                            {
+                                var identifier = userInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                                user = new ApplicationUser
+                                {
+                                    UserName = userInfo.Principal.FindFirstValue(ClaimTypes.Name),
+                                    Email = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
+                                    ImageUrl = $"https://graph.facebook.com/{identifier}/picturetype=album"
+                                };
+                            }
+                            await _userManager.CreateAsync(user);
+                            await _userManager.AddClaimAsync(user, new Claim("loginProvider", provider));
+                        }
+                        await _userManager.AddLoginAsync(user, userInfo);
+                        await _userManager.AddToRoleAsync(user, "User");
+                        await _signInManager.ExternalLoginSignInAsync(provider, providerKey, isPersistent: false, bypassTwoFactor: true);
+                        await _signInManager.UpdateExternalAuthenticationTokensAsync(userInfo);
+                        return Ok();
+                    }
+                    else throw new InvalidOperationException($"Email claim not received from {userInfo.LoginProvider}");
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is ArgumentNullException) return BadRequest(ex.Message);
+                if (ex is HttpRequestException) return BadRequest(ex.Message);
+                if (ex is InvalidOperationException) return BadRequest(ex.Message);
+                else return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+         }   
+
 
         [HttpGet("external-login-callback")]
         public async Task<IActionResult> ExternalLoginCallback()
+        
         {
+            
             var userInfo = await _signInManager.GetExternalLoginInfoAsync();
             if (userInfo == null) return BadRequest(ModelState);
 
             var result = await _signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: false, bypassTwoFactor: true);
             if (result.Succeeded)
             {
-                Response.Cookies.Append("Logged", "true");
-                return new RedirectResult("https://localhost:8080");
+                var user = await _userManager.FindByLoginAsync(userInfo.LoginProvider, userInfo.ProviderKey);
+                if (user == null) return BadRequest();
+                await _signInManager.UpdateExternalAuthenticationTokensAsync(userInfo);
+                return Ok();
             }
 
             else
@@ -150,11 +235,15 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                         await _userManager.AddClaimAsync(user, new Claim("loginProvider", userInfo.LoginProvider));
                     }
                     await _userManager.AddLoginAsync(user, userInfo);
-                    await _signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: true, bypassTwoFactor: true);
+                    result = await _signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: true, bypassTwoFactor: true);
+                    if (result.Succeeded)
+                    {
+                        await _signInManager.UpdateExternalAuthenticationTokensAsync(userInfo);
+                        Redirect("https://localhost:8080");
+                        return Ok();
+                    }
                     /*await signInManager.SignInAsync(user, isPersistent: true, GoogleDefaults.AuthenticationScheme);*/
-                    Response.Cookies.Append("Logged", "true");
-                    Redirect("https://localhost:8080");
-                    return new RedirectResult("https://localhost:8080");
+                    
                 }
                 return BadRequest($"Email claim not received from {userInfo.LoginProvider}");
             }
@@ -184,7 +273,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
             Response.Cookies.Delete("Logged");
             if (!result.Succeeded) return new BadRequestResult();
-            return new RedirectResult("https://localhost:8080");
+            return new RedirectResult("https://localhost:8080/signin");
         }
 
         /*[HttpGet]
