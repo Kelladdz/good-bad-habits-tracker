@@ -61,32 +61,25 @@ export default function Login() {
 			'_blank',
 			'width=500,height=600'
 		);
-		// window.open(`https://localhost:7154/api/auth/external-login?provider=Google`);
-		// console.log(res);
-
-		// const response = await axios
-		// 	// .post('https://localhost:7154/API/Account/GoogleLogin', {
-		// 	// 	imageUrl,
-		// 	// 	email,
-		// 	// 	name,
-		// 	// })
-		// 	.post('https://localhost:7154/API/Account/GoogleLogin?provider=Google')
-		// 	.then(resp => {
-		// 		console.log(resp);
-		// 		if (resp.status === 204) {
-		// 			console.log('204');
-		// 			navigate('/');
-		// 		}
-		// 	})
-		// 	.catch(err => {
-		// 		console.log(err);
-		// 		if (err.response.status === 400) console.log('400');
-		// 	})
 	};
 
-	const facebookLogin = res => {
-		console.log(res);
-		window.open('https://localhost:7154/api/auth/external-login?provider=Facebook', '_blank');
+	const facebookLogin = async res => {
+		const clientId = 'cNRB11SQnB796najkgVTLftkwgkdtNL5';
+		const redirectUri = 'https://localhost:8080/callback-facebook';
+		const scope = 'openid+profile+email';
+		const stateParameter = Pkce.stateParameterGenerator();
+		console.log(stateParameter);
+		const codeVerifier = Pkce.codeVerifierGenerator();
+		console.log(codeVerifier);
+		localStorage.setItem('codeVerifier', codeVerifier);
+		const codeChallenge = await Pkce.codeChallengeGeneratorAsync(codeVerifier);
+		console.log(codeChallenge);
+
+		window.open(
+			`https://dev-d3sgzf7qkeuvnndt.eu.auth0.com/authorize?response_type=code&client_id=${clientId}&connection=facebook&redirect_uri=${redirectUri}&scope=${scope}&state=${stateParameter}&code_challenge=${codeChallenge}&code_challenge_method=S256`,
+			'_blank',
+			'width=500,height=600'
+		);
 	};
 
 	const handleSubmit = event => {
@@ -188,22 +181,12 @@ export default function Login() {
 						<div className={css['line']}></div>
 					</div>
 					<div className={css['icons']}>
-						<a href='#' className={css['sign-in-btn']} onClick={googleLogin}>
+						<a className={css['sign-in-btn']} onClick={googleLogin}>
 							<img className={css['external-icon']} src={Google} />
 						</a>
-						<div id='signInButton' className={css['sign-in-btn']}>
-							{/* <FacebookLogin
-								appId='326877753548738'
-								scope='email, public_profile'
-								autoLoad={false}
-								fields='name,email,picture'
-								callback={facebookLogin}
-							/> */}
-
-							<a className={css['external-link']} style={{ paddingLeft: '3rem' }} href='#'>
-								<img className={css['external-icon']} src={Facebook} />
-							</a>
-						</div>
+						<a className={css['sign-in-btn']} onClick={facebookLogin}>
+							<img className={css['external-icon']} src={Facebook} />
+						</a>
 					</div>
 				</div>
 			</div>

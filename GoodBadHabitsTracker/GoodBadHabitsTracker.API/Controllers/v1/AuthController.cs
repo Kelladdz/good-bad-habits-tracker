@@ -146,25 +146,12 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                         var user = await _userManager.FindByEmailAsync(email);
                         if (user == null)
                         {
-                            if (userInfo.LoginProvider == "Google")
+                            user = new ApplicationUser
                             {
-                                user = new ApplicationUser
-                                {
-                                    UserName = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "name"))!.Value,
-                                    Email = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "email"))!.Value,
-                                    ImageUrl = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "picture"))!.Value
-                                };
-                            }
-                            if (userInfo.LoginProvider == "Facebook")
-                            {
-                                var identifier = userInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
-                                user = new ApplicationUser
-                                {
-                                    UserName = userInfo.Principal.FindFirstValue(ClaimTypes.Name),
-                                    Email = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
-                                    ImageUrl = $"https://graph.facebook.com/{identifier}/picturetype=album"
-                                };
-                            }
+                                UserName = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "name"))!.Value,
+                                Email = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "email"))!.Value,
+                                ImageUrl = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "picture"))!.Value
+                            };
                             await _userManager.CreateAsync(user);
                             await _userManager.AddClaimAsync(user, new Claim("loginProvider", provider));
                         }

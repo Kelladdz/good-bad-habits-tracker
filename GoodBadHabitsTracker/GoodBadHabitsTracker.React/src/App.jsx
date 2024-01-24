@@ -11,7 +11,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import useNavigation from './hooks/useNavigation';
 import Callback from './components/user/Callback';
-import {BrowserRouter as Router} from 'react-router-dom';
+import FacebookCallback from './components/user/FacebookCallback';
+import { BrowserRouter as Router } from 'react-router-dom';
 
 function App() {
 	const [registerErrors, setRegisterErrors] = useState({});
@@ -46,6 +47,9 @@ function App() {
 			</Route>
 			<Route path='/callback'>
 				<Callback />
+			</Route>
+			<Route path='/callback-facebook'>
+				<FacebookCallback />
 			</Route>
 			<Route path='/signup'>
 				<RegisterPage />
