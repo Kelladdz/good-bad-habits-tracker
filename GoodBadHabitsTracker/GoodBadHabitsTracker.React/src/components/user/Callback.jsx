@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import qs from 'qs';
 import { jwtDecode } from 'jwt-decode';
+import { auto } from '@popperjs/core';
 
 export default function Callback() {
 	const [userName, setUserName] = useState('');
@@ -29,6 +30,7 @@ export default function Callback() {
 				redirect_uri: 'https://localhost:8080/callback',
 				client_id: 'cNRB11SQnB796najkgVTLftkwgkdtNL5',
 				code_verifier: codeVerifier,
+				audience: 'https://localhost:8080',
 			};
 
 			const options = {

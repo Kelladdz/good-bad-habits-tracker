@@ -3,6 +3,7 @@ using Auth0.AuthenticationApi.Models;
 using GoodBadHabitsTracker.API.Exceptions;
 using GoodBadHabitsTracker.API.Services;
 using GoodBadHabitsTracker.API.Services.EmailSender;
+using GoodBadHabitsTracker.API.Services.IdTokenHandler;
 using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.DTOs;
 using GoodBadHabitsTracker.Core.Services.UserAccessor;
@@ -31,13 +32,16 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IWebHostEnvironment _environment;
         private readonly ICustomEmailSender<ApplicationUser> _emailSender;
+        private readonly IIDTokenHandler _idTokenHandler;
 
-        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender)
+        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender, IIDTokenHandler tokenHandler)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _environment = environment;
             _emailSender = emailSender;
+            _idTokenHandler = tokenHandler;
+
         }
         [HttpPost("register")]
         public async Task<IActionResult> Register
@@ -103,15 +107,15 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                 if (provider == null || (provider != "Google" && provider != "Facebook")) throw new HttpRequestException("Provider is not correct.");
 
                 var idToken = Request.Headers["Authentication"].ToString();
-                if (idToken == null) throw new HttpRequestException("Id token cannot be null.");
+                if (idToken == "") throw new HttpRequestException("Id token cannot be empty.");
 
                 var accessToken = Request.Headers["Authorization"].ToString();
-                if (accessToken == null) throw new HttpRequestException("Access token cannot be null.");
+                if (accessToken == "") throw new HttpRequestException("Access token cannot be empty.");
 
-                var tokenHandler = new IdTokenHandler();
-                var claimsPrincipal = tokenHandler.GetClaimsPrincipalFromIdToken(idToken);
+                var claimsPrincipal = _idTokenHandler.GetClaimsPrincipalFromIdToken(idToken);
+                if (claimsPrincipal == null) throw new InvalidOperationException("Claims principal cannot be null.");
 
-                var providerKey = claimsPrincipal.FindFirst(claim => claim.Type == "sub").Value;
+                var providerKey = claimsPrincipal.FindFirst(claim => claim.Type == "sub")?.Value;
                 if (providerKey == null) throw new InvalidOperationException("Provider key cannot be null.");
 
                 var userInfo = new ExternalLoginInfo(claimsPrincipal, provider, providerKey, provider);
@@ -119,6 +123,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                 userInfo.AuthenticationTokens = new List<AuthenticationToken>()
                 {
                     new AuthenticationToken(){ Name = "access_token", Value = accessToken},
+                    new AuthenticationToken(){ Name = "id_token", Value = idToken}
                 };
 
                 
@@ -136,11 +141,11 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                         IsEssential = true,
                         Expires = DateTimeOffset.UtcNow.AddHours(2)
                     });
-                    return Ok();
+                    return Ok(new { user.UserName, user.Email });
                 }
                 else
                 {
-                    var email = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "email"))!.Value;
+                    var email = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "email"))?.Value;
                     if (email != null)
                     {
                         var user = await _userManager.FindByEmailAsync(email);
@@ -149,7 +154,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                             user = new ApplicationUser
                             {
                                 UserName = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "name"))!.Value,
-                                Email = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "email"))!.Value,
+                                 Email = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "email"))!.Value,
                                 ImageUrl = claimsPrincipal.FindFirst(claim => string.Equals(claim.Type, "picture"))!.Value
                             };
                             await _userManager.CreateAsync(user);
@@ -159,7 +164,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                         await _userManager.AddToRoleAsync(user, "User");
                         await _signInManager.ExternalLoginSignInAsync(provider, providerKey, isPersistent: false, bypassTwoFactor: true);
                         await _signInManager.UpdateExternalAuthenticationTokensAsync(userInfo);
-                        return Ok();
+                        return Ok(new { user.UserName, user.Email});
                     }
                     else throw new InvalidOperationException($"Email claim not received from {userInfo.LoginProvider}");
                 }
@@ -173,70 +178,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             }
          }   
 
-
-        [HttpGet("external-login-callback")]
-        public async Task<IActionResult> ExternalLoginCallback()
-        
-        {
-            
-            var userInfo = await _signInManager.GetExternalLoginInfoAsync();
-            if (userInfo == null) return BadRequest(ModelState);
-
-            var result = await _signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: false, bypassTwoFactor: true);
-            if (result.Succeeded)
-            {
-                var user = await _userManager.FindByLoginAsync(userInfo.LoginProvider, userInfo.ProviderKey);
-                if (user == null) return BadRequest();
-                await _signInManager.UpdateExternalAuthenticationTokensAsync(userInfo);
-                return Ok();
-            }
-
-            else
-            {
-                var email = userInfo.Principal.FindFirstValue(ClaimTypes.Email);
-                if (email != null)
-                {
-                    var user = await _userManager.FindByEmailAsync(email);
-                    if (user == null)
-                    {
-                        if (userInfo.LoginProvider == "Google")
-                        {
-                            user = new ApplicationUser
-                            {
-                                UserName = userInfo.Principal.FindFirstValue(ClaimTypes.Name),
-                                Email = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
-                                ImageUrl = userInfo.Principal.FindFirst(claim => claim.Type == "image").Value
-                            };
-                        }
-                        if (userInfo.LoginProvider == "Facebook")
-                        {
-                            var identifier = userInfo.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
-                            user = new ApplicationUser
-                            {
-                                UserName = userInfo.Principal.FindFirstValue(ClaimTypes.Name),
-                                Email = userInfo.Principal.FindFirstValue(ClaimTypes.Email),
-                                ImageUrl = $"https://graph.facebook.com/{identifier}/picturetype=album"
-                            };
-                        }
-                        await _userManager.CreateAsync(user);
-                        await _userManager.AddClaimAsync(user, new Claim("loginProvider", userInfo.LoginProvider));
-                    }
-                    await _userManager.AddLoginAsync(user, userInfo);
-                    result = await _signInManager.ExternalLoginSignInAsync(userInfo.LoginProvider, userInfo.ProviderKey, isPersistent: true, bypassTwoFactor: true);
-                    if (result.Succeeded)
-                    {
-                        await _signInManager.UpdateExternalAuthenticationTokensAsync(userInfo);
-                        Redirect("https://localhost:8080");
-                        return Ok();
-                    }
-                    /*await signInManager.SignInAsync(user, isPersistent: true, GoogleDefaults.AuthenticationScheme);*/
-                    
-                }
-                return BadRequest($"Email claim not received from {userInfo.LoginProvider}");
-            }
-        }
-
-        [HttpGet("external-logout")]
+        /*[HttpGet("external-logout")]
         public async Task<IActionResult> ExternalLogout()
         {
 
@@ -245,12 +187,11 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             var redirectUrl = Url.Action(nameof(ExternalLogoutCallback), "Auth");
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
             return new ChallengeResult(properties);
-        }
+        }*/
 
-        [HttpGet("external-logout-callback")]
+        /*[HttpGet("external-logout-callback")]
         public async Task<IActionResult> ExternalLogoutCallback()
         {
-            var userInfo = await _signInManager.GetExternalLoginInfoAsync();
             if (userInfo.LoginProvider == "Google") _signInManager.AuthenticationScheme = GoogleDefaults.AuthenticationScheme;
             if (userInfo.LoginProvider == "Facebook") _signInManager.AuthenticationScheme = FacebookDefaults.AuthenticationScheme;
 
@@ -261,7 +202,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             Response.Cookies.Delete("Logged");
             if (!result.Succeeded) return new BadRequestResult();
             return new RedirectResult("https://localhost:8080/signin");
-        }
+        }*/
 
         /*[HttpGet]
         public IActionResult GoogleLogin([FromQuery] string provider)

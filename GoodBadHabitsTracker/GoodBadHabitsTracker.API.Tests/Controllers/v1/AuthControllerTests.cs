@@ -19,6 +19,13 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Security.Authentication;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Configuration;
+using GoodBadHabitsTracker.API.Services.IdTokenHandler;
+using System.Security.Claims;
+using System;
+using Bogus;
+using Azure.Core;
+using System.Net.Http;
+using Microsoft.Extensions.Primitives;
 
 namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
 {
@@ -33,7 +40,8 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
         private readonly IWebHostEnvironment _environment;
         private readonly Mock<ICustomEmailSender<ApplicationUser>> _emailSenderMock;
         private readonly ICustomEmailSender<ApplicationUser> _emailSender;
-     
+        private readonly Mock<IIDTokenHandler> _idTokenHandlerMock;
+        private readonly IIDTokenHandler _idTokenHandler;
         private readonly Mock<IUserStore<ApplicationUser>> _userStoreMock;
         private readonly IUserStore<ApplicationUser> _userStore;
         private readonly Mock<IOptions<IdentityOptions>> _identityOptionsMock;
@@ -59,9 +67,16 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
             _environment = _environmentMock.Object;
             _emailSenderMock = new Mock<ICustomEmailSender<ApplicationUser>>();
             _emailSender = _emailSenderMock.Object;
+            _idTokenHandlerMock = new Mock<IIDTokenHandler>();
+            _idTokenHandler = _idTokenHandlerMock.Object;
             _dataGenerator = new DataGenerator();
-            _authController = new AuthController(_userManager, _signInManager, _environment, _emailSender);
-            
+            _authController = new AuthController(_userManager, _signInManager, _environment, _emailSender, _idTokenHandler)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
+            };
             _userStoreMock = new Mock<IUserStore<ApplicationUser>>();
             _userStore = _userStoreMock.Object;
             _userManagerMock = new Mock<UserManager<ApplicationUser>>(_userStore, null, null, null, null, null, null, null, null);
@@ -86,7 +101,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
             _signInManager = _signInManagerMock.Object;
             
             _testOutputHelper = testOutputHelper;
-                       
+
             var services = new ServiceCollection();
             var configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string>
@@ -102,11 +117,17 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
             services.AddSingleton(_userManager);
             services.AddSingleton(_signInManager);
             services.AddSingleton(_environment);
-            services.TryAddTransient<ICustomEmailSender<ApplicationUser>, CustomEmailSender>();
+            services.AddTransient<ICustomEmailSender<ApplicationUser>, CustomEmailSender>();
+            services.AddTransient<IIDTokenHandler, IdTokenHandler>();
             services.AddTransient<AuthController>();
 
             var serviceProvider = services.BuildServiceProvider();
             _authController = serviceProvider.GetRequiredService<AuthController>();
+            _authController.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+
         }
 
         [Fact]
@@ -114,7 +135,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
         {
             //Arrange
             var request = _dataGenerator.SeedRegisterDto();
-            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender);
+            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender, _idTokenHandler);
             _userManagerMock.Setup(x => x.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
                 .ReturnsAsync(IdentityResult.Success);            
 
@@ -139,7 +160,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
         {
             //Arrange
             RegisterDto request = null;
-            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender);
+            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender, _idTokenHandler);
             
 
             //Act
@@ -159,7 +180,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
         {
             //Arrange
             var request = _dataGenerator.SeedRegisterDto();
-            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender);
+            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender, _idTokenHandler);
             controller.ModelState.AddModelError("Email", "Email address is not correct.");
 
 
@@ -182,7 +203,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
         {
             //Arrange
             var request = _dataGenerator.SeedRegisterDto();
-            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender);
+            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender, _idTokenHandler);
             _userManagerMock.Setup(x => x.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
                 .ReturnsAsync(IdentityResult.Failed(It.IsAny<IdentityError>()));
             
@@ -205,7 +226,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
         {
             //Arrange
             var request = _dataGenerator.SeedRegisterDto();
-            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender);
+            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender, _idTokenHandler);
 
 
             //Act
@@ -307,7 +328,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
         {
             //Arrange
             var request = _dataGenerator.SeedLoginDto();
-            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender);
+            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender, _idTokenHandler);
             _userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>()))
                  .ThrowsAsync(new Exception());
            
@@ -325,6 +346,332 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
             result.Value.Should().BeAssignableTo<string>();
         }
 
-        
+        [Fact]
+        public async Task ExternalLogin_ValidTokensAndUserHasLogin_ReturnsOk()
+        {
+            //Arrange
+            var provider = "Google";
+            var idToken = _dataGenerator.SeedGoogleIdToken();
+            var accessToken = _dataGenerator.SeedAccessToken();   
+            var httpContext = _authController.ControllerContext.HttpContext;
+
+            httpContext.Request.Headers.Authorization = $"Bearer {accessToken}";
+            httpContext.Request.Headers["Authentication"] = idToken;
+
+
+            _idTokenHandlerMock.Setup(x => x.GetClaimsPrincipalFromIdToken(It.IsAny<string>()))
+                .Returns(It.IsAny<ClaimsPrincipal>);    
+            _signInManagerMock.Setup(x => x.ExternalLoginSignInAsync(It.IsAny<string>(),
+                               It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>())).ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Success);
+            _userManagerMock.Setup(x => x.FindByLoginAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(new ApplicationUser());
+            _signInManagerMock.Setup(x => x.UpdateExternalAuthenticationTokensAsync(It.IsAny<ExternalLoginInfo>()))
+                .ReturnsAsync(IdentityResult.Success);
+            //Act
+
+            var result = await _authController.ExternalLogin(provider) as OkObjectResult;
+
+            //Assert
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status200OK);
+            var value = result.Value.Should().BeAssignableTo<object>().Subject;
+            var properties = value.GetType().GetProperties();
+            properties.Should().HaveCount(2);
+            properties.All(p => p.PropertyType == typeof(string)).Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task ExternalLogin_ValidTokensAndUserDoesntHaveLogin_ReturnsOk()
+        {
+            //Arrange
+            var provider = "Google";
+            var idToken = _dataGenerator.SeedGoogleIdToken();
+            var accessToken = _dataGenerator.SeedAccessToken();
+            var httpContext = _authController.ControllerContext.HttpContext;
+
+            httpContext.Request.Headers.Authorization = $"Bearer {accessToken}";
+            httpContext.Request.Headers["Authentication"] = idToken;
+
+
+            _idTokenHandlerMock.Setup(x => x.GetClaimsPrincipalFromIdToken(It.IsAny<string>()))
+                .Returns(It.IsAny<ClaimsPrincipal>);
+            _signInManagerMock.SetupSequence(x => x.ExternalLoginSignInAsync(It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>())).ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Failed)
+                .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Success); 
+            _userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>()))
+                .ReturnsAsync(new ApplicationUser());
+            _userManagerMock.Setup(x => x.AddLoginAsync(It.IsAny<ApplicationUser>(), It.IsAny<ExternalLoginInfo>()))
+                .ReturnsAsync(IdentityResult.Success);
+            _userManagerMock.Setup(x => x.AddToRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+                .ReturnsAsync(IdentityResult.Success);
+            _signInManagerMock.Setup(x => x.UpdateExternalAuthenticationTokensAsync(It.IsAny<ExternalLoginInfo>()))
+                .ReturnsAsync(IdentityResult.Success);
+
+            //Act
+
+            var result = await _authController.ExternalLogin(provider) as OkObjectResult;
+
+            //Assert
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status200OK);
+            var value = result.Value.Should().BeAssignableTo<object>().Subject;
+            var properties = value.GetType().GetProperties();
+            properties.Should().HaveCount(2);
+            properties.All(p => p.PropertyType == typeof(string)).Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task ExternalLogin_ValidTokensAndUserDoesntExists_ReturnsOk()
+        {
+            //Arrange
+            Random random = new Random();
+            var possibleProviders = new[] { "Google", "Facebook" };
+            var provider = possibleProviders[random.Next(possibleProviders.Length)];
+            var idToken = _dataGenerator.SeedGoogleIdToken();
+            var accessToken = _dataGenerator.SeedAccessToken();
+            var httpContext = _authController.ControllerContext.HttpContext;
+
+            httpContext.Request.Headers.Authorization = $"Bearer {accessToken}";
+            httpContext.Request.Headers["Authentication"] = idToken;
+
+
+            _idTokenHandlerMock.Setup(x => x.GetClaimsPrincipalFromIdToken(It.IsAny<string>()))
+                .Returns(It.IsAny<ClaimsPrincipal>);
+            _signInManagerMock.SetupSequence(x => x.ExternalLoginSignInAsync(It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>()))
+                .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Failed)
+                .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Success);
+            _userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>()))
+                .ReturnsAsync((ApplicationUser)null);
+            _userManagerMock.Setup(x => x.CreateAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(IdentityResult.Success);
+            _userManagerMock.Setup(x => x.AddClaimAsync(It.IsAny<ApplicationUser>(), It.IsAny<Claim>()))
+                .ReturnsAsync(IdentityResult.Success);
+            _userManagerMock.Setup(x => x.AddLoginAsync(It.IsAny<ApplicationUser>(), It.IsAny<ExternalLoginInfo>()))
+                .ReturnsAsync(IdentityResult.Success);
+            _userManagerMock.Setup(x => x.AddToRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+                .ReturnsAsync(IdentityResult.Success);
+            _signInManagerMock.Setup(x => x.UpdateExternalAuthenticationTokensAsync(It.IsAny<ExternalLoginInfo>()))
+                .ReturnsAsync(IdentityResult.Success);
+
+            //Act
+
+            var result = await _authController.ExternalLogin(provider) as OkObjectResult;
+
+            //Assert
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status200OK);
+            var value = result.Value.Should().BeAssignableTo<object>().Subject;
+            var properties = value.GetType().GetProperties();
+            properties.Should().HaveCount(2);
+            properties.All(p => p.PropertyType == typeof(string)).Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task ExternalLogin_NullProvider_ReturnsBadRequest()
+        {
+            //Arrange
+            string provider = null;
+
+            //Act
+            Func<Task> action = async () => await _authController.ExternalLogin(provider);
+            var result = await _authController.ExternalLogin(provider) as BadRequestObjectResult;
+
+            //Assert
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<HttpRequestException>();
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeAssignableTo<string>();
+        }
+
+        [Fact]
+        public async Task ExternalLogin_InvalidProvider_ReturnsBadRequest()
+        {
+            //Arrange
+            string provider = _dataGenerator.SeedInvalidProvider();
+
+            //Act
+            Func<Task> action = async () => await _authController.ExternalLogin(provider);
+            var result = await _authController.ExternalLogin(provider) as BadRequestObjectResult;
+
+            //Assert
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<HttpRequestException>();
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeAssignableTo<string>();
+        }
+
+        [Fact]
+        public async Task ExternalLogin_NullIdToken_ReturnsBadRequest()
+        {
+            //Arrange
+            Random random = new Random();
+            var possibleProviders = new[] { "Google", "Facebook" };
+            var provider = possibleProviders[random.Next(possibleProviders.Length)];
+            var accessToken = _dataGenerator.SeedAccessToken();
+            var httpContext = _authController.ControllerContext.HttpContext;
+
+            httpContext.Request.Headers["Authentication"] = StringValues.Empty;
+            httpContext.Request.Headers.Authorization = $"Bearer {accessToken}";
+
+            //Act
+            Func<Task> action = async () => await _authController.ExternalLogin(provider);
+            var result = await _authController.ExternalLogin(provider) as BadRequestObjectResult;
+
+            //Assert
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<HttpRequestException>();
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeAssignableTo<string>();
+        }
+
+        [Fact]
+        public async Task ExternalLogin_NullAccessToken_ReturnsBadRequest()
+        {
+            //Arrange
+            Random random = new Random();
+            var possibleProviders = new[] { "Google", "Facebook" };
+            var provider = possibleProviders[random.Next(possibleProviders.Length)];
+            var idToken = _dataGenerator.SeedGoogleIdToken();
+            var httpContext = _authController.ControllerContext.HttpContext;
+
+            httpContext.Request.Headers.Authorization = StringValues.Empty;
+            httpContext.Request.Headers["Authentication"] = idToken;
+
+            //Act
+            Func<Task> action = async () => await _authController.ExternalLogin(provider);
+            var result = await _authController.ExternalLogin(provider) as BadRequestObjectResult;
+
+            //Assert
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<HttpRequestException>();
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeAssignableTo<string>();
+        }
+
+        [Fact]
+        public async Task ExternalLogin_NullClaimsPrincipal_ReturnsBadRequest()
+        {
+            //Arrange
+            Random random = new Random();
+            var possibleProviders = new[] { "Google", "Facebook" };
+            var provider = possibleProviders[random.Next(possibleProviders.Length)];
+            var accessToken = _dataGenerator.SeedAccessToken();
+            var idToken = _dataGenerator.SeedGoogleIdToken();
+            var httpContext = _authController.ControllerContext.HttpContext;
+
+            httpContext.Request.Headers.Authorization = $"Bearer {accessToken}";
+            httpContext.Request.Headers["Authentication"] = StringValues.Empty;
+
+            _idTokenHandlerMock.Setup(x => x.GetClaimsPrincipalFromIdToken(It.IsAny<string>()))
+                .Returns((ClaimsPrincipal)null);
+
+            //Act
+            Func<Task> action = async () => await _authController.ExternalLogin(provider);
+            var result = await _authController.ExternalLogin(provider) as BadRequestObjectResult;
+            var tokenHandlerResult = _idTokenHandler.GetClaimsPrincipalFromIdToken(idToken);
+
+            //Assert
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<HttpRequestException>();
+            result.Should().NotBeNull();
+            tokenHandlerResult.Should().BeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeAssignableTo<string>();
+        }
+
+        [Fact]
+        public async Task ExternalLogin_NullProviderKey_ReturnsBadRequest()
+        {
+            //Arrange
+            Random random = new Random();
+            var possibleProviders = new[] { "Google", "Facebook" };
+            var provider = possibleProviders[random.Next(possibleProviders.Length)];
+            var idToken = _dataGenerator.SeedGoogleIdTokenWithoutProviderKey();
+            var accessToken = _dataGenerator.SeedAccessToken();
+            var httpContext = _authController.ControllerContext.HttpContext;
+
+            httpContext.Request.Headers.Authorization = $"Bearer {accessToken}";
+            httpContext.Request.Headers["Authentication"] = idToken;
+
+            _idTokenHandlerMock.Setup(x => x.GetClaimsPrincipalFromIdToken(idToken))
+                .Returns((ClaimsPrincipal)null);
+
+            //Act
+            Func<Task> action = async () => await _authController.ExternalLogin(provider);
+            var result = await _authController.ExternalLogin(provider) as BadRequestObjectResult;
+
+            //Assert
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<InvalidOperationException>().WithMessage("Provider key cannot be null.");
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeAssignableTo<string>();
+        }
+
+        [Fact]
+        public async Task ExternalLogin_NullUserInfo_ReturnsBadRequest()
+        {
+            //Arrange
+            Random random = new Random();
+            var possibleProviders = new[] { "Google", "Facebook" };
+            var provider = possibleProviders[random.Next(possibleProviders.Length)];
+            string idToken = _dataGenerator.SeedGoogleIdTokenWithoutProviderKey();
+            string accessToken = _dataGenerator.SeedAccessToken();
+            var httpContext = _authController.ControllerContext.HttpContext;
+
+            httpContext.Request.Headers.Authorization = $"Bearer {accessToken}";
+            httpContext.Request.Headers["Authentication"] = idToken;
+
+            _idTokenHandlerMock.Setup(x => x.GetClaimsPrincipalFromIdToken(idToken))
+                .Returns(It.IsAny<ClaimsPrincipal>());
+
+            //Act
+            Func<Task> action = async () => await _authController.ExternalLogin(provider);
+            var result = await _authController.ExternalLogin(provider) as BadRequestObjectResult;
+
+            //Assert
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<ArgumentNullException>().WithMessage("User info cannot be null.");
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeAssignableTo<string>();
+        }
+
+        [Fact]
+        public async Task ExternalLogin_NullEmail_ReturnsBadRequest()
+        {
+            //Arrange
+            Random random = new Random();
+            var possibleProviders = new[] { "Google", "Facebook" };
+            var provider = possibleProviders[random.Next(possibleProviders.Length)];
+            var idToken = _dataGenerator.SeedGoogleIdTokenWithoutEmail();
+            var accessToken = _dataGenerator.SeedAccessToken();
+            var httpContext = _authController.ControllerContext.HttpContext;
+
+            httpContext.Request.Headers.Authorization = $"Bearer {accessToken}";
+            httpContext.Request.Headers["Authentication"] = idToken;
+
+            _idTokenHandlerMock.Setup(x => x.GetClaimsPrincipalFromIdToken(It.IsAny<string>()))
+                .Returns(It.IsAny<ClaimsPrincipal>);
+            _signInManagerMock.Setup(x => x.ExternalLoginSignInAsync(It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>()))
+                .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Failed);
+
+            //Act
+            Func<Task> action = async () => await _authController.ExternalLogin(provider);
+            var result = await _authController.ExternalLogin(provider) as BadRequestObjectResult;
+
+            //Assert
+            action.Should().NotBeNull();
+            action.Should().ThrowAsync<InvalidOperationException>().WithMessage($"Email claim not received from {provider}");
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeAssignableTo<string>();
+        }
     }
 }

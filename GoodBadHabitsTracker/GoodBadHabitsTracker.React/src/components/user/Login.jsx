@@ -48,6 +48,7 @@ export default function Login() {
 		const clientId = 'cNRB11SQnB796najkgVTLftkwgkdtNL5';
 		const redirectUri = 'https://localhost:8080/callback';
 		const scope = 'openid+profile+email';
+		const audience = 'https://localhost:8080';
 		const stateParameter = Pkce.stateParameterGenerator();
 		console.log(stateParameter);
 		const codeVerifier = Pkce.codeVerifierGenerator();

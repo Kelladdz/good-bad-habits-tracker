@@ -1,12 +1,17 @@
 ﻿using Bogus;
+using FluentAssertions.Common;
 using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.Domain.Models;
 using GoodBadHabitsTracker.Core.DTOs;
 using GoodBadHabitsTracker.Infrastructure.Persistance;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,6 +28,7 @@ namespace GoodBadHabitsTracker.TestMisc
             "friday",
             "saturday",
             "sunday"];
+        string[] possibleProviders = ["Google", "Facebook"];
 
         
         public IEnumerable<Habit> SeedHabitsCollection(int number)
@@ -150,6 +156,150 @@ namespace GoodBadHabitsTracker.TestMisc
 
             IEnumerable<ApplicationUser> users = userGenerator.Generate(number);
             return users;
+        }
+        public string SeedGoogleIdToken()
+        {
+            var headerGenerator = new Faker<JwtHeader>()
+                .CustomInstantiator(f => new JwtHeader()
+                {
+                    { "alg", "RS256" },
+                    { "typ", "JWT" }
+                }); 
+            var payloadGenerator = new Faker<JwtPayload>()
+                .CustomInstantiator(f => new JwtPayload()
+                {
+                    { "given_name", f.Name.FirstName() },
+                    { "family_name", f.Name.LastName() },
+                    { "nickname", f.Internet.UserName() },
+                    { "name", f.Internet.UserName() },
+                    { "picture", f.Internet.Avatar() },
+                    { "locale", f.Random.RandomLocale() },
+                    { "updated_at", DateTime.Now.ToString() },
+                    { "email", f.Internet.Email() },
+                    { "email_verified", f.Internet.Email() },
+                    { "iss", f.Internet.Url() },
+                    { "aud", f.Random.String2(24) },
+                    { "iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() },
+                    { "exp", DateTimeOffset.UtcNow.AddHours(10).ToUnixTimeSeconds().ToString() },
+                    { "sub", f.Random.String(20) },
+                    { "sid", f.Random.String(30) }
+                });
+
+            var signatureGenerator = new Faker<string>()
+                .CustomInstantiator(f => f.Random.String2(32));
+
+
+
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("12345678901234567890123456789012"));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            var header = (JwtHeader)headerGenerator;
+            var payload = (JwtPayload)payloadGenerator;
+
+
+            var token = new JwtSecurityToken(header, payload);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.WriteToken(token);
+            return jwtToken.ToString();
+        }
+
+        public string SeedGoogleIdTokenWithoutProviderKey()
+        {
+            var headerGenerator = new Faker<JwtHeader>()
+                .CustomInstantiator(f => new JwtHeader()
+                {
+                    { "alg", "RS256" },
+                    { "typ", "JWT" }
+                });
+            var payloadGenerator = new Faker<JwtPayload>()
+                .CustomInstantiator(f => new JwtPayload()
+                {
+                    { "given_name", f.Name.FirstName() },
+                    { "family_name", f.Name.LastName() },
+                    { "nickname", f.Internet.UserName() },
+                    { "name", f.Internet.UserName() },
+                    { "picture", f.Internet.Avatar() },
+                    { "locale", f.Random.RandomLocale() },
+                    { "updated_at", DateTime.Now.ToString() },
+                    { "email", f.Internet.Email() },
+                    { "email_verified", f.Internet.Email() },
+                    { "iss", f.Internet.Url() },
+                    { "aud", f.Random.String2(24) },
+                    { "iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() },
+                    { "exp", DateTimeOffset.UtcNow.AddHours(10).ToUnixTimeSeconds().ToString() },
+                    { "sid", f.Random.String(30) }
+                });
+
+            var signatureGenerator = new Faker<string>()
+                .CustomInstantiator(f => f.Random.String2(32));
+
+
+            var header = (JwtHeader)headerGenerator;
+            var payload = (JwtPayload)payloadGenerator;
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("12345678901234567890123456789012"));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(header, payload);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.WriteToken(token);
+            return jwtToken.ToString();
+        }
+
+        public string SeedGoogleIdTokenWithoutEmail()
+        {
+            var headerGenerator = new Faker<JwtHeader>()
+                .CustomInstantiator(f => new JwtHeader()
+                {
+                    { "alg", "RS256" },
+                    { "typ", "JWT" }
+                });
+            var payloadGenerator = new Faker<JwtPayload>()
+                .CustomInstantiator(f => new JwtPayload()
+                {
+                    { "given_name", f.Name.FirstName() },
+                    { "family_name", f.Name.LastName() },
+                    { "nickname", f.Internet.UserName() },
+                    { "name", f.Internet.UserName() },
+                    { "picture", f.Internet.Avatar() },
+                    { "locale", f.Random.RandomLocale() },
+                    { "updated_at", DateTime.Now.ToString() },
+                    { "iss", f.Internet.Url() },
+                    { "aud", f.Random.String2(24) },
+                    { "iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() },
+                    { "exp", DateTimeOffset.UtcNow.AddHours(10).ToUnixTimeSeconds().ToString() },
+                    { "sub", f.Random.String(20) },
+                    { "sid", f.Random.String(30) }
+                });
+
+            var signatureGenerator = new Faker<string>()
+                .CustomInstantiator(f => f.Random.String2(32));
+
+
+
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("12345678901234567890123456789012"));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            var header = (JwtHeader)headerGenerator;
+            var payload = (JwtPayload)payloadGenerator;
+
+
+            var token = new JwtSecurityToken(header, payload);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.WriteToken(token);
+            return jwtToken.ToString();
+        }
+
+        public string SeedAccessToken()
+        {
+            var accessTokenGenerator = new Faker<string>()
+                .CustomInstantiator(f => f.Random.String2(32));
+
+            var accessToken = (string)accessTokenGenerator;
+            return accessToken;
+        }
+        public string SeedInvalidProvider()
+        {
+            var invalidProviderGenerator = new Faker();
+            var invalidProvider = invalidProviderGenerator.Lorem.Word();
+            return invalidProvider;
         }
     }
 }

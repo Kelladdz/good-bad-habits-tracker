@@ -1,6 +1,7 @@
 ﻿using Asp.Versioning;
 using GoodBadHabitsTracker.API.Exceptions;
 using GoodBadHabitsTracker.API.Services.EmailSender;
+using GoodBadHabitsTracker.API.Services.IdTokenHandler;
 using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.Domain.Interfaces;
 using GoodBadHabitsTracker.Infrastructure.Persistance;
@@ -49,6 +50,7 @@ namespace GoodBadHabitsTracker.API.Extensions
                 options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "api.xml"));
             });
             services.AddHttpClient();
+            services.AddScoped<IIDTokenHandler, IdTokenHandler>();
         }
     }
 }
