@@ -1,11 +1,10 @@
 ﻿using Azure.Core;
 using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.Domain.Interfaces;
-using GoodBadHabitsTracker.Infrastructure.Configurations;
 using GoodBadHabitsTracker.Infrastructure.Persistance;
 using GoodBadHabitsTracker.Infrastructure.Repositories;
 using GoodBadHabitsTracker.Infrastructure.Services.IdTokenHandler;
-using GoodBadHabitsTracker.Infrastructure.Services.JwtTokenGenerator;
+using GoodBadHabitsTracker.Infrastructure.Services.JwtTokenHandler;
 using GoodBadHabitsTracker.Infrastructure.Services.JwtTokenRevoker;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.BearerToken;
@@ -51,7 +50,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
             services.AddScoped<IHabitsRepository, HabitsRepository>();
             services.AddScoped<IUsersRepository, UsersRepository>();
             services.AddScoped<IIDTokenHandler, IdTokenHandler>();
-            services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+            services.AddScoped<IJwtTokenHandler, JwtTokenHandler>();
 
             services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
             {
@@ -87,18 +86,31 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                             var jwtToken = securityToken as JsonWebToken;
                             if (jwtToken is null) return false;
 
-                            var userFingerprintClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "userFingerprint")?.Value;
-                            if (userFingerprintClaim is null) return false;
+                            var userFingerprintHash = jwtToken.Claims.FirstOrDefault(c => c.Type == "userFingerprint")?.Value;
+                            if (userFingerprintHash is null) return false;
 
-                            var isValid = audience.Any(audience => audience.Equals(validationParameters.ValidAudience, StringComparison.OrdinalIgnoreCase));
-                            return isValid;
+                            return audience.Any(audience => audience.Equals(validationParameters.ValidAudience, StringComparison.OrdinalIgnoreCase));
                         },
                         LifetimeValidator = new JwtTokenRevoker().ValidateTokenLifetime
                     };
                     new JwtBearerEvents().OnAuthenticationFailed = (context) =>
                     {
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                        context.Response.WriteAsync("Unauthorized");
+                        return Task.CompletedTask;
+                    };
+                    new JwtBearerEvents().OnTokenValidated = (context) =>
+                    {
+                        var jwtToken = context.SecurityToken as JsonWebToken;
+                        if (jwtToken is null) return Task.CompletedTask;
+
+                        var userFingerprintHash = jwtToken.Claims.FirstOrDefault(c => c.Type == "userFingerprint")?.Value;
+                        if (userFingerprintHash is null) return Task.CompletedTask;
+
+                        if (userFingerprintHash != new JwtTokenHandler(builder.Configuration).GenerateUserFingerprintHash(context.Request.Cookies["__Secure-Fgp"].Replace("__Secure-Fgp=", "", StringComparison.InvariantCultureIgnoreCase)))
+                        {
+                            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                            return Task.CompletedTask;
+                        }
                         return Task.CompletedTask;
                     };
                 })
@@ -179,13 +191,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                 options.Scope.Add("profile");
                 options.ClaimActions.MapJsonKey("image", "picture");
             });*/
-            services.AddAuthorizationBuilder()
-                .AddPolicy("CommonPolicy", policy =>
-                {
-                    policy.RequireAuthenticatedUser();
-                    policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
-                    policy.RequireClaim("userFingerprint");
-                });
+            services.AddAuthorization();
             
         }
     }

@@ -13,7 +13,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
     [ApiVersion("1.0")]
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Policy = "CommonPolicy")]
+    [Authorize]
     public class HabitsController(IHabitsService habitsService, IMapper mapper, IUserAccessor userAccessor) : ControllerBase
     {
         /// <summary>

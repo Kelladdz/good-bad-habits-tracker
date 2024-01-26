@@ -13,7 +13,6 @@ using GoodBadHabitsTracker.API.Extensions;
 using Org.BouncyCastle.Crypto.Signers;
 using Serilog;
 using System.Web.WebPages;
-using GoodBadHabitsTracker.Infrastructure.Configurations;
 
 var builder = WebApplication.CreateBuilder(args);
 

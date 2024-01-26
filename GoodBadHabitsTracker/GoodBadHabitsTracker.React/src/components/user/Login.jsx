@@ -35,8 +35,10 @@ export default function Login() {
 			.then(res => {
 				console.log(res);
 				if (res.status === 200) {
-					sessionStorage.setItem('token', res.data.token);
-					navigate('/all-habits');
+					sessionStorage.setItem('accessToken', res.data.accessToken);
+					sessionStorage.setItem('refreshToken', res.data.refreshToken);
+					if (sessionStorage.getItem('accessToken') !== null && sessionStorage.getItem('refreshToken') !== null)
+						navigate('/all-habits');
 				} else {
 					sessionStorage.removeItem('token');
 				}

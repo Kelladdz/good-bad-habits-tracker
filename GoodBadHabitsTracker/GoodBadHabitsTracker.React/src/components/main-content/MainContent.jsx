@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import useNavigation from '../../hooks/useNavigation';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 export default function MainContent() {
 	const { navigate } = useNavigation();
@@ -27,10 +28,20 @@ export default function MainContent() {
 	};
 
 	const getHabits = async () => {
+		if (jwtDecode(sessionStorage.getItem('accessToken')).exp > Date.now().valueOf() / 1000) {
+			await axios.post(
+				'https://localhost:7154/api/auth/refresh-token',
+				{
+					accessToken: sessionStorage.getItem('accessToken'),
+					refreshToken: sessionStorage.getItem('refreshToken'),
+				},
+				{ withCredentials: true }
+			);
+		}
 		await axios
 			.get('https://localhost:7154/api/habits?date=10-01-2024&page=1&limit=10', {
 				withCredentials: true,
-				headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` },
+				headers: { Authorization: `Bearer ${sessionStorage.getItem('accessToken')}` },
 			})
 			.then(res => {
 				console.log(res);

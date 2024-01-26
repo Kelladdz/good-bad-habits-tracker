@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
 using Auth0.AuthenticationApi.Models;
+using Azure.Core;
 using GoodBadHabitsTracker.API.Exceptions;
 using GoodBadHabitsTracker.API.Services;
 using GoodBadHabitsTracker.API.Services.EmailSender;
@@ -8,7 +9,7 @@ using GoodBadHabitsTracker.Core.DTOs;
 using GoodBadHabitsTracker.Core.Services.UserAccessor;
 using GoodBadHabitsTracker.Core.Services.UserService;
 using GoodBadHabitsTracker.Infrastructure.Services.IdTokenHandler;
-using GoodBadHabitsTracker.Infrastructure.Services.JwtTokenGenerator;
+using GoodBadHabitsTracker.Infrastructure.Services.JwtTokenHandler;
 using GoodBadHabitsTracker.Infrastructure.Services.JwtTokenRevoker;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -19,7 +20,9 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq.Dynamic.Core.Tokenizer;
 using System.Security.Authentication;
 using System.Security.Claims;
 
@@ -36,17 +39,17 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         private readonly IWebHostEnvironment _environment;
         private readonly ICustomEmailSender<ApplicationUser> _emailSender;
         private readonly IIDTokenHandler _idTokenHandler;
-        private readonly IJwtTokenGenerator _jwtTokenGenerator;
+        private readonly IJwtTokenHandler _jwtTokenHandler;
         private readonly IJwtTokenRevoker _jwtTokenRevoker;
 
-        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender, IIDTokenHandler tokenHandler, IJwtTokenGenerator jwtTokenGenerator, IJwtTokenRevoker jwtTokenRevoker)
+        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender, IIDTokenHandler idTokenHandler, IJwtTokenHandler jwtTokenHandler, IJwtTokenRevoker jwtTokenRevoker)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _environment = environment;
             _emailSender = emailSender;
-            _idTokenHandler = tokenHandler;
-            _jwtTokenGenerator = jwtTokenGenerator;
+            _idTokenHandler = idTokenHandler;
+            _jwtTokenHandler = jwtTokenHandler;
             _jwtTokenRevoker = jwtTokenRevoker;
         }
         [HttpPost("register")]
@@ -94,26 +97,31 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                 var user = await _userManager.FindByEmailAsync(request.Email);
                 if (user is null) throw new InvalidCredentialException("Invalid email or password");
 
-                var result = await _userManager.CheckPasswordAsync(user, request.Password);
-                if (!result) throw new InvalidCredentialException("Invalid email or password");
+                var checkPasswordResult = await _userManager.CheckPasswordAsync(user, request.Password);
+                if (!checkPasswordResult) throw new InvalidCredentialException("Invalid email or password");
 
                 var getUserRole = await _userManager.GetRolesAsync(user);
                 var userSession = new UserSession(user.Id, user.UserName, user.Email, getUserRole[0]);
 
-                var token = _jwtTokenGenerator.GenerateJwtToken(userSession);
-                if (token is null) throw new InvalidOperationException("Token cannot be null.");
+                var accessToken = _jwtTokenHandler.GenerateAccessToken(userSession, out string userFingerprint);
+                if (accessToken is null) throw new InvalidOperationException("Token cannot be null.");
 
-                var fingerprint = _jwtTokenGenerator.GenerateUserFingerprint();
-                if (fingerprint is null) throw new InvalidOperationException("Fingerprint cannot be null.");
+                var refreshToken = _jwtTokenHandler.GenerateRefreshToken();
+                if (refreshToken is null) throw new InvalidOperationException("Refresh token cannot be null.");
 
-                Response.Cookies.Append("__Secure-Fgp", fingerprint, new CookieOptions
+                user.RefreshToken = refreshToken;
+                user.RefreshTokenExpirationDate = DateTime.UtcNow.AddDays(7);
+                var userUpdateResult = await _userManager.UpdateAsync(user);
+                if (!userUpdateResult.Succeeded) throw new InvalidOperationException("User update failed.");
+
+                Response.Cookies.Append("__Secure-Fgp", userFingerprint, new CookieOptions
                 {
                     SameSite = SameSiteMode.Strict,
                     HttpOnly = true,
                     Secure = true,
                     MaxAge = TimeSpan.FromMinutes(15),
                 });
-                return Ok(new { token = token.ToString() });
+                return Ok(new { accessToken = accessToken.ToString(), refreshToken = refreshToken });
             }
             catch (Exception ex)
             {
@@ -122,6 +130,46 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                 if (ex is InvalidOperationException) return BadRequest(ex.Message);
                 else return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> NewRefreshToken([FromBody]NewRefreshTokenDto request)
+        {
+            if (request is null) throw new HttpRequestException("Request cannot be null.");
+            
+            var principal = _jwtTokenHandler.GetPrincipalFromExpiredToken(request.AccessToken);
+            if (principal is null) throw new InvalidOperationException("Principal cannot be null.");
+
+            var userId = principal.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (userId is null) throw new InvalidOperationException("User id cannot be null.");
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null) throw new InvalidOperationException("User cannot be null.");
+                
+            if (user.RefreshToken != request.RefreshToken ||
+                user.RefreshTokenExpirationDate <= DateTime.UtcNow) throw new UnauthorizedAccessException("Refresh Token is invalid.");
+
+            var getUserRole = await _userManager.GetRolesAsync(user);
+            var userSession = new UserSession(user.Id, user.UserName, user.Email, getUserRole[0]);
+            var newAccessToken = _jwtTokenHandler.GenerateAccessToken(userSession, out string userFingerprint);
+            if (newAccessToken is null) throw new InvalidOperationException("New access token cannot be null.");
+
+            var newRefreshToken = _jwtTokenHandler.GenerateRefreshToken();
+            if (newRefreshToken is null) throw new InvalidOperationException("New refresh token cannot be null.");
+
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpirationDate = DateTime.UtcNow.AddDays(7);
+            var userUpdateResult = await _userManager.UpdateAsync(user);
+            if (!userUpdateResult.Succeeded) throw new InvalidOperationException("User update failed.");
+
+            Response.Cookies.Append("__Secure-Fgp", userFingerprint, new CookieOptions
+            {
+                SameSite = SameSiteMode.Strict,
+                HttpOnly = true,
+                Secure = true,
+                MaxAge = TimeSpan.FromMinutes(15),
+            });
+            return Ok(new { accessToken = newAccessToken.ToString(), refreshToken = newRefreshToken });
         }
 
         [HttpPost("logout")]

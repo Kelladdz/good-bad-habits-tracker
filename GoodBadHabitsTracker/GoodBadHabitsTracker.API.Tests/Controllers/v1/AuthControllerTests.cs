@@ -26,6 +26,7 @@ using Azure.Core;
 using System.Net.Http;
 using Microsoft.Extensions.Primitives;
 using GoodBadHabitsTracker.Infrastructure.Services.IdTokenHandler;
+using GoodBadHabitsTracker.Infrastructure.Services.JwtTokenGenerator;
 
 namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
 {
@@ -42,6 +43,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
         private readonly ICustomEmailSender<ApplicationUser> _emailSender;
         private readonly Mock<IIDTokenHandler> _idTokenHandlerMock;
         private readonly IIDTokenHandler _idTokenHandler;
+        private readonly Mock<IJwtTokenGenerator
         private readonly Mock<IUserStore<ApplicationUser>> _userStoreMock;
         private readonly IUserStore<ApplicationUser> _userStore;
         private readonly Mock<IOptions<IdentityOptions>> _identityOptionsMock;

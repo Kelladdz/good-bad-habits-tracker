@@ -14,5 +14,6 @@ namespace GoodBadHabitsTracker.Core.Services.UserService
             var loginProvider = usersRepository.GetExternalLoginProvider(userId);
             return loginProvider;
         }
+
     }
 }
