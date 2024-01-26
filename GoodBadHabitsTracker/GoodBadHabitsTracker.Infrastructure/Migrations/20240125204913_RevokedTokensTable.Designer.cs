@@ -4,6 +4,7 @@ using GoodBadHabitsTracker.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GoodBadHabitsTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(HabitsDbContext))]
-    partial class HabitsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240125204913_RevokedTokensTable")]
+    partial class RevokedTokensTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -138,7 +141,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Migrations
 
                     b.HasKey("JwtTokenDigest");
 
-                    b.ToTable("RevokedTokens", (string)null);
+                    b.ToTable("RevokedTokens");
                 });
 
             modelBuilder.Entity("GoodBadHabitsTracker.Core.Domain.Models.Habit", b =>
@@ -186,7 +189,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Habits", (string)null);
+                    b.ToTable("Habits");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -300,7 +303,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("GoodBadHabitsTracker.Core.Domain.Models.Habit.Statistics#GoodBadHabitsTracker.Core.Domain.Models.Stats", "Statistics", b1 =>
+                    b.OwnsOne("GoodBadHabitsTracker.Core.Domain.Models.Stats", "Statistics", b1 =>
                         {
                             b1.Property<Guid>("HabitId")
                                 .HasColumnType("uniqueidentifier");
@@ -322,7 +325,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Migrations
 
                             b1.HasKey("HabitId");
 
-                            b1.ToTable("Habits", (string)null);
+                            b1.ToTable("Habits");
 
                             b1.WithOwner()
                                 .HasForeignKey("HabitId");

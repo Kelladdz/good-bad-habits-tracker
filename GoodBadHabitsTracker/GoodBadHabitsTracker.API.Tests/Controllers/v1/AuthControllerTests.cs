@@ -19,13 +19,13 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Security.Authentication;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Configuration;
-using GoodBadHabitsTracker.API.Services.IdTokenHandler;
 using System.Security.Claims;
 using System;
 using Bogus;
 using Azure.Core;
 using System.Net.Http;
 using Microsoft.Extensions.Primitives;
+using GoodBadHabitsTracker.Infrastructure.Services.IdTokenHandler;
 
 namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
 {

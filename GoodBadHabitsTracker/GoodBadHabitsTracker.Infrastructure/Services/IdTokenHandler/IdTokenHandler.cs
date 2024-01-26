@@ -1,7 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-namespace GoodBadHabitsTracker.API.Services.IdTokenHandler
+namespace GoodBadHabitsTracker.Infrastructure.Services.IdTokenHandler
 {
     public class IdTokenHandler : IIDTokenHandler
     {

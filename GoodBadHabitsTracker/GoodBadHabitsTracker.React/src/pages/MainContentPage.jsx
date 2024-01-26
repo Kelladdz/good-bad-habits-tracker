@@ -1,9 +1,9 @@
 import MainContent from '../components/main-content/MainContent';
 
-export default function MainContentPage({onLogout}) {
+export default function MainContentPage() {
 	return (
 		<div>
-			<MainContent onLogout={onLogout}/>
+			<MainContent />
 		</div>
 	);
 }

@@ -14,6 +14,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Persistance
     {
         public virtual DbSet<Habit> Habits { get; set; }
         public virtual DbSet<ApplicationUser> Users { get; set; }
+        public virtual DbSet<RevokedToken> RevokedTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -26,6 +27,11 @@ namespace GoodBadHabitsTracker.Infrastructure.Persistance
             });
             modelBuilder.Entity<Habit>()
                 .OwnsOne(h => h.Statistics);
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=GoodBadHabitsTrackerDb;Trusted_Connection=True;TrustServerCertificate=True;");
         }
     }
 }

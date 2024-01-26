@@ -3,11 +3,13 @@ using Auth0.AuthenticationApi.Models;
 using GoodBadHabitsTracker.API.Exceptions;
 using GoodBadHabitsTracker.API.Services;
 using GoodBadHabitsTracker.API.Services.EmailSender;
-using GoodBadHabitsTracker.API.Services.IdTokenHandler;
 using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.DTOs;
 using GoodBadHabitsTracker.Core.Services.UserAccessor;
 using GoodBadHabitsTracker.Core.Services.UserService;
+using GoodBadHabitsTracker.Infrastructure.Services.IdTokenHandler;
+using GoodBadHabitsTracker.Infrastructure.Services.JwtTokenGenerator;
+using GoodBadHabitsTracker.Infrastructure.Services.JwtTokenRevoker;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Facebook;
@@ -17,6 +19,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Authentication;
 using System.Security.Claims;
 
@@ -33,15 +36,18 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         private readonly IWebHostEnvironment _environment;
         private readonly ICustomEmailSender<ApplicationUser> _emailSender;
         private readonly IIDTokenHandler _idTokenHandler;
+        private readonly IJwtTokenGenerator _jwtTokenGenerator;
+        private readonly IJwtTokenRevoker _jwtTokenRevoker;
 
-        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender, IIDTokenHandler tokenHandler)
+        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment environment, ICustomEmailSender<ApplicationUser> emailSender, IIDTokenHandler tokenHandler, IJwtTokenGenerator jwtTokenGenerator, IJwtTokenRevoker jwtTokenRevoker)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _environment = environment;
             _emailSender = emailSender;
             _idTokenHandler = tokenHandler;
-
+            _jwtTokenGenerator = jwtTokenGenerator;
+            _jwtTokenRevoker = jwtTokenRevoker;
         }
         [HttpPost("register")]
         public async Task<IActionResult> Register
@@ -49,17 +55,20 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         {
             try
             {
-                if (request == null) throw new HttpRequestException("Request cannot be null.");
+                if (request is null) throw new HttpRequestException("Request cannot be null.");
                 if (!ModelState.IsValid) throw new ArgumentException("User data is invalid.");
 
                 var user = new ApplicationUser()
                 {
                     Email = request.Email,
                     UserName = request.Name,
+                    PasswordHash = request.Password,
                 };
 
                 IdentityResult result = await _userManager.CreateAsync(user, request.Password!);
                 if (!result.Succeeded) throw new ConflictException("This name or email exists.");
+
+                await _userManager.AddToRoleAsync(user, "User");
 
                 await _emailSender.SendWelcomeMessageAsync(user, user.Email);
 
@@ -80,23 +89,48 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         {
             try
             {
-                if (request == null) throw new HttpRequestException("Request cannot be null.");
+                if (request is null) throw new HttpRequestException("Request cannot be null.");
 
                 var user = await _userManager.FindByEmailAsync(request.Email);
-                if (user == null) throw new InvalidCredentialException("Invalid email or password");
+                if (user is null) throw new InvalidCredentialException("Invalid email or password");
 
-                _signInManager.AuthenticationScheme = "CookiesAuth";
-                var result = await _signInManager.PasswordSignInAsync(user, request.Password, isPersistent: true, lockoutOnFailure: false);
-                if (!result.Succeeded) throw new InvalidCredentialException("Invalid email or password");
+                var result = await _userManager.CheckPasswordAsync(user, request.Password);
+                if (!result) throw new InvalidCredentialException("Invalid email or password");
 
-                return Ok(new {user.UserName, user.Email});
+                var getUserRole = await _userManager.GetRolesAsync(user);
+                var userSession = new UserSession(user.Id, user.UserName, user.Email, getUserRole[0]);
+
+                var token = _jwtTokenGenerator.GenerateJwtToken(userSession);
+                if (token is null) throw new InvalidOperationException("Token cannot be null.");
+
+                var fingerprint = _jwtTokenGenerator.GenerateUserFingerprint();
+                if (fingerprint is null) throw new InvalidOperationException("Fingerprint cannot be null.");
+
+                Response.Cookies.Append("__Secure-Fgp", fingerprint, new CookieOptions
+                {
+                    SameSite = SameSiteMode.Strict,
+                    HttpOnly = true,
+                    Secure = true,
+                    MaxAge = TimeSpan.FromMinutes(15),
+                });
+                return Ok(new { token = token.ToString() });
             }
             catch (Exception ex)
             {
                 if (ex is HttpRequestException) return BadRequest(ex.Message);
                 if (ex is InvalidCredentialException) return Unauthorized(ex.Message);
+                if (ex is InvalidOperationException) return BadRequest(ex.Message);
                 else return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
+        }
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout([FromHeader(Name = "Authorization")] string authorization)
+        {
+            if (string.IsNullOrWhiteSpace(authorization)) return NoContent();
+            string bearerToken = authorization.Replace("Bearer ", "", StringComparison.InvariantCultureIgnoreCase);
+            await _jwtTokenRevoker.SignOutAsync(new JwtSecurityToken(bearerToken));
+            return Ok();
         }
 
         [HttpPost("external-login")]
@@ -137,7 +171,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                     {
                         HttpOnly = false,
                         Secure = true,
-                        SameSite = SameSiteMode.None,
+                        SameSite = SameSiteMode.Lax,
                         IsEssential = true,
                         Expires = DateTimeOffset.UtcNow.AddHours(2)
                     });
@@ -164,6 +198,14 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                         await _userManager.AddToRoleAsync(user, "User");
                         await _signInManager.ExternalLoginSignInAsync(provider, providerKey, isPersistent: false, bypassTwoFactor: true);
                         await _signInManager.UpdateExternalAuthenticationTokensAsync(userInfo);
+                        Response.Cookies.Append("ONSESS", "true", new CookieOptions
+                        {
+                            HttpOnly = false,
+                            Secure = true,
+                            SameSite = SameSiteMode.Lax,
+                            IsEssential = true,
+                            Expires = DateTimeOffset.UtcNow.AddHours(2)
+                        });
                         return Ok(new { user.UserName, user.Email});
                     }
                     else throw new InvalidOperationException($"Email claim not received from {userInfo.LoginProvider}");
@@ -178,31 +220,25 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             }
          }   
 
-        /*[HttpGet("external-logout")]
+        [HttpPost("external-logout")]
         public async Task<IActionResult> ExternalLogout()
         {
+            var provider = User.Claims.FirstOrDefault(claim => claim.Type == "loginProvider").Value;
+            var userId = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+            if (userId == null) return NotFound();
+            var user = await _userManager.FindByIdAsync(userId);    
+            if (user == null) return NotFound();
+            await _signInManager.SignOutAsync();
+            await _userManager.RemoveAuthenticationTokenAsync(user, provider, "access_token");
+            await _userManager.RemoveAuthenticationTokenAsync(user, provider, "id_token");
+            return Ok();
+        }
 
-            var provider = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.AuthenticationMethod).Value;
-            if (provider == null) return NoContent();
-            var redirectUrl = Url.Action(nameof(ExternalLogoutCallback), "Auth");
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
-            return new ChallengeResult(properties);
-        }*/
-
-        /*[HttpGet("external-logout-callback")]
+        [HttpGet("external-logout-callback")]
         public async Task<IActionResult> ExternalLogoutCallback()
         {
-            if (userInfo.LoginProvider == "Google") _signInManager.AuthenticationScheme = GoogleDefaults.AuthenticationScheme;
-            if (userInfo.LoginProvider == "Facebook") _signInManager.AuthenticationScheme = FacebookDefaults.AuthenticationScheme;
-
-            var user = await _userManager.FindByLoginAsync(userInfo.LoginProvider, userInfo.ProviderKey);
-            if (user == null) return BadRequest(ModelState);
-            var result = await _userManager.RemoveLoginAsync(user, userInfo.LoginProvider, userInfo.ProviderKey);
-            await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
-            Response.Cookies.Delete("Logged");
-            if (!result.Succeeded) return new BadRequestResult();
-            return new RedirectResult("https://localhost:8080/signin");
-        }*/
+            return Ok();
+        }
 
         /*[HttpGet]
         public IActionResult GoogleLogin([FromQuery] string provider)
@@ -334,13 +370,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             return new RedirectResult("https://localhost:8080");
         }*/
 
-        [HttpGet("logout")]
-        public async Task<IActionResult> Logout()
-        {
-            await HttpContext.SignOutAsync("CookiesAuth");
-            Response.Cookies.Delete("Logged");
-            return new OkResult();
-        }
+        
 
         [HttpPost]
         [AllowAnonymous]

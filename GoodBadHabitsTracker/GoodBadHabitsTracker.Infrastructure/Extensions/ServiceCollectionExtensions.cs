@@ -1,13 +1,17 @@
 ﻿using Azure.Core;
 using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.Domain.Interfaces;
-
+using GoodBadHabitsTracker.Infrastructure.Configurations;
 using GoodBadHabitsTracker.Infrastructure.Persistance;
 using GoodBadHabitsTracker.Infrastructure.Repositories;
+using GoodBadHabitsTracker.Infrastructure.Services.IdTokenHandler;
+using GoodBadHabitsTracker.Infrastructure.Services.JwtTokenGenerator;
+using GoodBadHabitsTracker.Infrastructure.Services.JwtTokenRevoker;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -17,12 +21,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -31,16 +38,20 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+        public static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration, WebApplicationBuilder builder)
         {
             services.Configure<CookiePolicyOptions>(options =>
             {
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
             services.AddDbContext<HabitsDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("Default")));
+                options.UseSqlServer(configuration.GetSection("ConnectionStrings:Default").Value));
+            services.AddHttpContextAccessor()
+                .AddSingleton<IJwtTokenRevoker, JwtTokenRevoker>();
             services.AddScoped<IHabitsRepository, HabitsRepository>();
             services.AddScoped<IUsersRepository, UsersRepository>();
+            services.AddScoped<IIDTokenHandler, IdTokenHandler>();
+            services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
             services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
             {
@@ -51,16 +62,53 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                 options.Password.RequireNonAlphanumeric = false;
             })
                 .AddEntityFrameworkStores<HabitsDbContext>()
-                .AddTokenProvider<DataProtectorTokenProvider<ApplicationUser>>(TokenOptions.DefaultProvider)
+                .AddDefaultTokenProviders()
                 .AddUserStore<UserStore<ApplicationUser, ApplicationRole, HabitsDbContext, Guid>>()
                 .AddRoleStore<RoleStore<ApplicationRole, HabitsDbContext, Guid>>();
-            services.AddAuthentication()
-                .AddCookie("CookiesAuth", options =>
+
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                        ValidAudience = builder.Configuration["Jwt:Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidateLifetime = true,
+                        AudienceValidator = (audience, securityToken, validationParameters) =>
+                        {
+                            var jwtToken = securityToken as JsonWebToken;
+                            if (jwtToken is null) return false;
+
+                            var userFingerprintClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "userFingerprint")?.Value;
+                            if (userFingerprintClaim is null) return false;
+
+                            var isValid = audience.Any(audience => audience.Equals(validationParameters.ValidAudience, StringComparison.OrdinalIgnoreCase));
+                            return isValid;
+                        },
+                        LifetimeValidator = new JwtTokenRevoker().ValidateTokenLifetime
+                    };
+                    new JwtBearerEvents().OnAuthenticationFailed = (context) =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.Response.WriteAsync("Unauthorized");
+                        return Task.CompletedTask;
+                    };
+                })
+
+                /*.AddCookie("CookiesAuth", options =>
                 {
                     options.Cookie.Name = "JSESSIONID";
                     options.Cookie.HttpOnly = true;
                     options.Cookie.SameSite = SameSiteMode.Lax;
-                    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
                     options.Cookie.IsEssential = true;
                     options.SlidingExpiration = true;
                     options.ExpireTimeSpan = new TimeSpan(2, 0, 0);
@@ -70,13 +118,13 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                         context.Response.Cookies.Append("ONSESS", "true", new CookieOptions
                         {
                             HttpOnly = false,
-                            Secure = false,
-                            SameSite = SameSiteMode.None,
+                            Secure = true,
+                            SameSite = SameSiteMode.Lax,
                             IsEssential = true,
                             Expires = DateTimeOffset.UtcNow.AddHours(2)
                         });
                         return Task.CompletedTask;
-                    }; 
+                    };
                     options.Events.OnSigningOut = (context) =>
                     {
                         context.Response.Cookies.Delete("JSESSIONID");
@@ -84,7 +132,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                         return Task.CompletedTask;
                     };
 
-                })
+                })*/
                 /*.AddOpenIdConnect("Google", options =>
                 {
                     options.ClientId = configuration.GetSection("web:client_id").Value;
@@ -107,13 +155,14 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                         context.Response.Cookies.Append("ONSESS", "true", new CookieOptions
                         {
                             HttpOnly = false,
-                            Secure = false,
+                            Secure = true,
                             SameSite = SameSiteMode.Lax,
                             IsEssential = true,
                             Expires = DateTimeOffset.UtcNow.AddHours(2)
                         });
                         return Task.CompletedTask;
                     };
+                    
                 }).
                 AddFacebook(options =>
                 {
@@ -130,7 +179,13 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                 options.Scope.Add("profile");
                 options.ClaimActions.MapJsonKey("image", "picture");
             });*/
-            services.AddAuthorization();
+            services.AddAuthorizationBuilder()
+                .AddPolicy("CommonPolicy", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+                    policy.RequireClaim("userFingerprint");
+                });
             
         }
     }

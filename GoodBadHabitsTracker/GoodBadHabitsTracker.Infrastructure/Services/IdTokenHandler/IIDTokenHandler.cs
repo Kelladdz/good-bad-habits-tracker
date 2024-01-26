@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace GoodBadHabitsTracker.API.Services.IdTokenHandler
+namespace GoodBadHabitsTracker.Infrastructure.Services.IdTokenHandler
 {
     public interface IIDTokenHandler
     {

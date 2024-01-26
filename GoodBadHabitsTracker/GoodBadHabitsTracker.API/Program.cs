@@ -13,11 +13,12 @@ using GoodBadHabitsTracker.API.Extensions;
 using Org.BouncyCastle.Crypto.Signers;
 using Serilog;
 using System.Web.WebPages;
+using GoodBadHabitsTracker.Infrastructure.Configurations;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddUi(builder.Configuration);
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, builder);
 builder.Services.AddCore();
 builder.Services.AddCors(options =>
 {

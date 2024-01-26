@@ -13,6 +13,7 @@ import useNavigation from './hooks/useNavigation';
 import Callback from './components/user/Callback';
 import FacebookCallback from './components/user/FacebookCallback';
 import { BrowserRouter as Router } from 'react-router-dom';
+import GoogleLogoutCallback from './components/user/GoogleLogoutCallback';
 
 function App() {
 	const [registerErrors, setRegisterErrors] = useState({});
@@ -50,6 +51,9 @@ function App() {
 			</Route>
 			<Route path='/callback-facebook'>
 				<FacebookCallback />
+			</Route>
+			<Route path='/callback-google-logout'>
+				<GoogleLogoutCallback />
 			</Route>
 			<Route path='/signup'>
 				<RegisterPage />

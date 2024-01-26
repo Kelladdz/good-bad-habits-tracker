@@ -34,10 +34,16 @@ export default function Login() {
 			)
 			.then(res => {
 				console.log(res);
-				if (res.status === 200) navigate('/all-habits');
+				if (res.status === 200) {
+					sessionStorage.setItem('token', res.data.token);
+					navigate('/all-habits');
+				} else {
+					sessionStorage.removeItem('token');
+				}
 			})
 			.catch(errs => {
 				console.log(errs);
+				sessionStorage.removeItem('token');
 				if (errs.response.status === 401 || errs.response.data.includes('NullReferenceException'))
 					errorData = 'Invalid email or password';
 			});
