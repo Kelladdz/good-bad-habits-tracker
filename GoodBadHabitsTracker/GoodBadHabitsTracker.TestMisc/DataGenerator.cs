@@ -287,19 +287,28 @@ namespace GoodBadHabitsTracker.TestMisc
             return jwtToken.ToString();
         }
 
-        public string SeedAccessToken()
+        public string SeedToken()
         {
-            var accessTokenGenerator = new Faker<string>()
+            var tokenGenerator = new Faker<string>()
                 .CustomInstantiator(f => f.Random.String2(32));
 
-            var accessToken = (string)accessTokenGenerator;
-            return accessToken;
+            var token = (string)tokenGenerator;
+            return token;
         }
         public string SeedInvalidProvider()
         {
             var invalidProviderGenerator = new Faker();
             var invalidProvider = invalidProviderGenerator.Lorem.Word();
             return invalidProvider;
+        }
+
+        public string SeedFingerprint()
+        {
+            var fingerprintGenerator = new Faker<string>()
+                .CustomInstantiator(f => f.Random.String2(32));
+
+            var fingerprint = (string)fingerprintGenerator;
+            return fingerprint;
         }
     }
 }

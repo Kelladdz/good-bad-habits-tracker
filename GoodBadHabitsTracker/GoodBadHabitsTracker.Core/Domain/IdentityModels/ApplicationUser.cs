@@ -20,7 +20,5 @@ namespace GoodBadHabitsTracker.Core.Domain.IdentityModels
         public DateTime? RefreshTokenExpirationDate { get; set; }
         [EmailAddress(ErrorMessage = "This value should be a valid email")]
         public override string? Email { get; set; }
-
-
     }
 }

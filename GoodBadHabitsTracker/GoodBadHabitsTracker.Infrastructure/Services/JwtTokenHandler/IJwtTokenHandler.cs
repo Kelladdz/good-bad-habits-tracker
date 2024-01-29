@@ -9,6 +9,7 @@ namespace GoodBadHabitsTracker.Infrastructure.Services.JwtTokenHandler
         public string GenerateAccessToken(UserSession userSession, out string userFingerprint);
         public string GenerateRefreshToken();
         public string GenerateUserFingerprint();
+        public string GenerateUserFingerprintHash(string userFingerprint);
         public ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
     }
 }

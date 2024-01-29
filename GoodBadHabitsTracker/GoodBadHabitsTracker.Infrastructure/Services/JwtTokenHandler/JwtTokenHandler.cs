@@ -1,5 +1,7 @@
 ﻿using GoodBadHabitsTracker.Core.Domain.IdentityModels;
+using GoodBadHabitsTracker.Infrastructure.Configurations;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -10,11 +12,11 @@ using System.Text;
 
 namespace GoodBadHabitsTracker.Infrastructure.Services.JwtTokenHandler
 {
-    public class JwtTokenHandler(IConfiguration configuration) : IJwtTokenHandler
+    public class JwtTokenHandler(IOptions<JwtSettings> jwtSettings) : IJwtTokenHandler
     {
         public string GenerateAccessToken(UserSession userSession, out string userFingerprint)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection("Jwt:Key").Value!));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Value.Key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             userFingerprint = GenerateUserFingerprint();
@@ -33,8 +35,8 @@ namespace GoodBadHabitsTracker.Infrastructure.Services.JwtTokenHandler
                 }),
                 IssuedAt = DateTime.UtcNow,
                 Expires = DateTime.UtcNow.AddMinutes(15),
-                Issuer = configuration.GetSection("Jwt:Issuer").Value!,
-                Audience = configuration.GetSection("Jwt:Audience").Value!,
+                Issuer = jwtSettings.Value.Issuer,
+                Audience = jwtSettings.Value.Audience,
                 SigningCredentials = credentials
             };
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -86,11 +88,11 @@ namespace GoodBadHabitsTracker.Infrastructure.Services.JwtTokenHandler
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
-                ValidIssuer = configuration.GetSection("Jwt:Issuer").Value!,
+                ValidIssuer = jwtSettings.Value.Issuer,
                 ValidateAudience = true,
-                ValidAudience = configuration.GetSection("Jwt:Audience").Value!,
+                ValidAudience = jwtSettings.Value.Audience,
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection("Jwt:Key").Value!)),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Value.Key)),
                 ValidateLifetime = false
             };
 

@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using GoodBadHabitsTracker.Core.Domain.IdentityModels;
 using GoodBadHabitsTracker.Core.Domain.Interfaces;
+using GoodBadHabitsTracker.Infrastructure.Configurations;
 using GoodBadHabitsTracker.Infrastructure.Persistance;
 using GoodBadHabitsTracker.Infrastructure.Repositories;
 using GoodBadHabitsTracker.Infrastructure.Services.IdTokenHandler;
@@ -20,12 +21,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Management;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Reflection.Metadata.Ecma335;
@@ -37,20 +40,21 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration, WebApplicationBuilder builder)
+        public static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<CookiePolicyOptions>(options =>
             {
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
+            services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
             services.AddDbContext<HabitsDbContext>(options =>
                 options.UseSqlServer(configuration.GetSection("ConnectionStrings:Default").Value));
-            services.AddHttpContextAccessor()
-                .AddSingleton<IJwtTokenRevoker, JwtTokenRevoker>();
-            services.AddScoped<IHabitsRepository, HabitsRepository>();
-            services.AddScoped<IUsersRepository, UsersRepository>();
+            services.AddSingleton<IOptions<JwtSettings>>();
             services.AddScoped<IIDTokenHandler, IdTokenHandler>();
             services.AddScoped<IJwtTokenHandler, JwtTokenHandler>();
+            services.AddScoped<IJwtTokenRevoker, JwtTokenRevoker>();
+            services.AddScoped<IHabitsRepository, HabitsRepository>();
+            services.AddScoped<IUsersRepository, UsersRepository>();
 
             services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
             {
@@ -74,9 +78,9 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                 {
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                        ValidAudience = builder.Configuration["Jwt:Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+                        ValidIssuer = configuration["Jwt:Issuer"],
+                        ValidAudience = configuration["Jwt:Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"])),
                         ValidateIssuer = true,
                         ValidateAudience = true,
                         ValidateIssuerSigningKey = true,
@@ -106,7 +110,8 @@ namespace GoodBadHabitsTracker.Infrastructure.Extensions
                         var userFingerprintHash = jwtToken.Claims.FirstOrDefault(c => c.Type == "userFingerprint")?.Value;
                         if (userFingerprintHash is null) return Task.CompletedTask;
 
-                        if (userFingerprintHash != new JwtTokenHandler(builder.Configuration).GenerateUserFingerprintHash(context.Request.Cookies["__Secure-Fgp"].Replace("__Secure-Fgp=", "", StringComparison.InvariantCultureIgnoreCase)))
+                        var jwtSettings = Options.Create(new JwtSettings());
+                        if (userFingerprintHash != new JwtTokenHandler(jwtSettings).GenerateUserFingerprintHash(context.Request.Cookies["__Secure-Fgp"].Replace("__Secure-Fgp=", "", StringComparison.InvariantCultureIgnoreCase)))
                         {
                             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                             return Task.CompletedTask;

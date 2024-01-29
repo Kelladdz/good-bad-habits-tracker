@@ -75,7 +75,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
 
                 await _emailSender.SendWelcomeMessageAsync(user, user.Email);
 
-                return CreatedAtRoute("GetUserById", new { userId = user.UserName }, user);
+                return CreatedAtRoute("GetUserById", new { userId = user.Id }, user);
             }
             catch (Exception ex)
             {
@@ -101,6 +101,11 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                 if (!checkPasswordResult) throw new InvalidCredentialException("Invalid email or password");
 
                 var getUserRole = await _userManager.GetRolesAsync(user);
+                if (getUserRole is null)
+                {
+                    var result = await _userManager.AddToRoleAsync(user, "User");
+                    if (!result.Succeeded) throw new InvalidOperationException("User role cannot be added.");
+                }
                 var userSession = new UserSession(user.Id, user.UserName, user.Email, getUserRole[0]);
 
                 var accessToken = _jwtTokenHandler.GenerateAccessToken(userSession, out string userFingerprint);
@@ -132,7 +137,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
             }
         }
 
-        [HttpPost("refresh-token")]
+        [HttpPost("token/refresh")]
         public async Task<IActionResult> NewRefreshToken([FromBody]NewRefreshTokenDto request)
         {
             if (request is null) throw new HttpRequestException("Request cannot be null.");

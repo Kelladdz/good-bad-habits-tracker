@@ -28,9 +28,9 @@ export default function MainContent() {
 	};
 
 	const getHabits = async () => {
-		if (jwtDecode(sessionStorage.getItem('accessToken')).exp > Date.now().valueOf() / 1000) {
+		if (jwtDecode(sessionStorage.getItem('accessToken')).exp < Date.now().valueOf() / 1000) {
 			await axios.post(
-				'https://localhost:7154/api/auth/refresh-token',
+				'https://localhost:7154/api/auth/token/refresh',
 				{
 					accessToken: sessionStorage.getItem('accessToken'),
 					refreshToken: sessionStorage.getItem('refreshToken'),
