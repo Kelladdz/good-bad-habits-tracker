@@ -289,7 +289,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
         public delegate string GenerateAccessTokenReturns(UserSession userSession, out string userFingerprint);
 
         [Fact]
-        public async Task Login_ValidCredentials_ReturnsOk()
+        public async Task Login_ValidCredentialsUserHasRole_ReturnsOk()
         {
             //Arrange
             var request = _dataGenerator.SeedLoginDto();
@@ -394,11 +394,10 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
         {
             //Arrange
             var request = _dataGenerator.SeedLoginDto();
-            var userId = Guid.NewGuid();
-            List<string> getUserRole = null;
+            List<string> getUserRole = new List<string>();
 
             _userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>()))
-                 .ReturnsAsync(new ApplicationUser { Id = userId, UserName = request.Email, Email = request.Email });
+                 .ReturnsAsync(new ApplicationUser { Id = Guid.NewGuid(), UserName = request.Email, Email = request.Email });
             _userManagerMock.Setup(x => x.CheckPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>())).ReturnsAsync(true);
             _userManagerMock.Setup(x => x.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(getUserRole);
             _userManagerMock.Setup(x => x.AddToRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
@@ -406,7 +405,7 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
 
             //Act
             Func<Task> action = async () => await _authController.Login(request);
-            var result = await _authController.Login(request) as OkObjectResult;
+            var result = await _authController.Login(request) as BadRequestObjectResult;
 
             //Assert
             action.Should().ThrowAsync<InvalidOperationException>().WithMessage("User role cannot be added.");
@@ -414,8 +413,8 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
             result.Value.Should().BeEquivalentTo("User role cannot be added.");
         }
 
-/*        [Fact]
-        public async Task Login_NullAccessToken_ReturnsUnauthorized()
+        [Fact]
+        public async Task Login_UserHasRoleNullAccessToken_ReturnsUnauthorized()
         {
             //Arrange
             var request = _dataGenerator.SeedLoginDto();
@@ -427,53 +426,206 @@ namespace GoodBadHabitsTracker.API.Tests.Controllers.v1
                  .ReturnsAsync(new ApplicationUser { Id = userId, UserName = request.Email, Email = request.Email });
             _userManagerMock.Setup(x => x.CheckPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>())).ReturnsAsync(true);
             _userManagerMock.Setup(x => x.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(new List<string> { "User" });
-            _jwtTokenHandlerMock.Setup(x => x.GenerateUserFingerprint()).Returns(It.IsAny<string>());
-            _jwtTokenHandlerMock.Setup(x => x.GenerateUserFingerprintHash(It.IsAny<string>())).Returns(It.IsAny<string>());
             _jwtTokenHandlerMock.Setup(x => x.GenerateAccessToken(It.IsAny<UserSession>(), out It.Ref<string>.IsAny))
-                .Callback(new GenerateAccessTokenCallback((UserSession session, out string userFingerprint) =>
-                {
-                    userFingerprint = _jwtTokenHandler.GenerateUserFingerprint();
-                }))
-                .Returns(new GenerateAccessTokenReturns((UserSession session, out string userFingerprint) =>
-                {
-                    userFingerprint = expectedUserFingerprint;
-                    return accessToken;
-                }));
-            _jwtTokenHandlerMock.Setup(x => x.GenerateRefreshToken()).Returns(refreshToken);
-            _userManagerMock.Setup(x => x.UpdateAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(IdentityResult.Success);
+                .Returns(accessToken);
 
             //Act
-            var result = await _authController.Login(request) as OkObjectResult;
+            Func<Task> action = async () => await _authController.Login(request);
+            var result = await _authController.Login(request) as BadRequestObjectResult;
 
             //Assert
-            result.StatusCode.Should().Be(StatusCodes.Status200OK);
-            var expectedResult = new { accessToken, refreshToken };
-            result.Value.Should().BeEquivalentTo(expectedResult);
-            var properties = result.Value.GetType().GetProperties();
-            properties.Should().HaveCount(2);
-            properties.All(p => p.PropertyType == typeof(string)).Should().BeTrue();
-            httpContext.Response.Headers["Set-Cookie"].Should().BeEquivalentTo($"__Secure-Fgp={expectedUserFingerprint}; max-age=900; path=/; secure; samesite=strict; httponly");
-        }*/
+            action.Should().ThrowAsync<InvalidOperationException>().WithMessage("Access token cannot be null.");
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeEquivalentTo("Access token cannot be null.");       
+        }
+
+        [Fact]
+        public async Task Login_UserHasRoleNullRefreshToken_ReturnsUnauthorized()
+        {
+            //Arrange
+            var request = _dataGenerator.SeedLoginDto();
+            var userId = Guid.NewGuid();
+            var userSession = new UserSession(userId, request.Email, request.Email, "User");
+            var accessToken = _dataGenerator.SeedToken();
+            string refreshToken = null;
+
+            _userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>()))
+                 .ReturnsAsync(new ApplicationUser { Id = userId, UserName = request.Email, Email = request.Email });
+            _userManagerMock.Setup(x => x.CheckPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>())).ReturnsAsync(true);
+            _userManagerMock.Setup(x => x.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(new List<string> { "User" });
+            _jwtTokenHandlerMock.Setup(x => x.GenerateAccessToken(It.IsAny<UserSession>(), out It.Ref<string>.IsAny))
+                .Returns(accessToken);
+            _jwtTokenHandlerMock.Setup(x => x.GenerateRefreshToken()).Returns(refreshToken);
+
+            //Act
+            Func<Task> action = async () => await _authController.Login(request);
+            var result = await _authController.Login(request) as BadRequestObjectResult;
+
+            //Assert
+            action.Should().ThrowAsync<InvalidOperationException>().WithMessage("Refresh token cannot be null.");
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeEquivalentTo("Refresh token cannot be null.");
+        }
+
+        [Fact]
+        public async Task Login_UserHasRoleCantUpdateUser_ReturnsUnauthorized()
+        {
+            //Arrange
+            var request = _dataGenerator.SeedLoginDto();
+            var userId = Guid.NewGuid();
+            var userSession = new UserSession(userId, request.Email, request.Email, "User");
+            var accessToken = _dataGenerator.SeedToken();
+            string refreshToken = _dataGenerator.SeedToken();
+
+            _userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>()))
+                 .ReturnsAsync(new ApplicationUser { Id = userId, UserName = request.Email, Email = request.Email });
+            _userManagerMock.Setup(x => x.CheckPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>())).ReturnsAsync(true);
+            _userManagerMock.Setup(x => x.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(new List<string> { "User" });
+            _jwtTokenHandlerMock.Setup(x => x.GenerateAccessToken(It.IsAny<UserSession>(), out It.Ref<string>.IsAny))
+                .Returns(accessToken);
+            _jwtTokenHandlerMock.Setup(x => x.GenerateRefreshToken()).Returns(refreshToken);
+            _userManagerMock.Setup(x => x.UpdateAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(IdentityResult.Failed(It.IsAny<IdentityError>()));
+
+            //Act
+            Func<Task> action = async () => await _authController.Login(request);
+            var result = await _authController.Login(request) as BadRequestObjectResult;
+
+            //Assert
+            action.Should().ThrowAsync<InvalidOperationException>().WithMessage("User update failed.");
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeEquivalentTo("User update failed.");
+        }
+
+        [Fact]
+        public async Task Login_UserDoesntHaveRoleNullAccessToken_ReturnsUnauthorized()
+        {
+            //Arrange
+            var request = _dataGenerator.SeedLoginDto();
+            var userId = Guid.NewGuid();
+            List<string> getUserRole = new List<string>();
+            var userSession = new UserSession(userId, request.Email, request.Email, "User");
+            string accessToken = null;
+
+            _userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>()))
+                 .ReturnsAsync(new ApplicationUser { Id = userId, UserName = request.Email, Email = request.Email });
+            _userManagerMock.Setup(x => x.CheckPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>())).ReturnsAsync(true);
+            _userManagerMock.Setup(x => x.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(getUserRole);
+            _userManagerMock.Setup(x => x.AddToRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+                .Callback(() =>
+                {
+                    getUserRole.Add("User");
+                })
+                .ReturnsAsync(() =>
+                {
+                    return IdentityResult.Success;
+                });    
+            _jwtTokenHandlerMock.Setup(x => x.GenerateAccessToken(It.IsAny<UserSession>(), out It.Ref<string>.IsAny))
+                .Returns(accessToken);
+
+
+            //Act
+            Func<Task> action = async () => await _authController.Login(request);
+            var result = await _authController.Login(request) as BadRequestObjectResult;
+
+            //Assert
+            action.Should().ThrowAsync<InvalidOperationException>().WithMessage("Access token cannot be null.");
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeEquivalentTo("Access token cannot be null.");
+        }
+
+        [Fact]
+        public async Task Login_UserDoesntHaveRoleNullRefreshToken_ReturnsUnauthorized()
+        {
+            //Arrange
+            var request = _dataGenerator.SeedLoginDto();
+            var userId = Guid.NewGuid();
+            List<string> getUserRole = new List<string>();
+            var userSession = new UserSession(userId, request.Email, request.Email, "User");
+            string accessToken = _dataGenerator.SeedToken();
+            string refreshToken = null;
+
+            _userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>()))
+                 .ReturnsAsync(new ApplicationUser { Id = userId, UserName = request.Email, Email = request.Email });
+            _userManagerMock.Setup(x => x.CheckPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>())).ReturnsAsync(true);
+            _userManagerMock.Setup(x => x.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(getUserRole);
+            _userManagerMock.Setup(x => x.AddToRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+                .Callback(() =>
+                {
+                    getUserRole.Add("User");
+                })
+                .ReturnsAsync(() =>
+                {
+                    return IdentityResult.Success;
+                });
+            _jwtTokenHandlerMock.Setup(x => x.GenerateAccessToken(It.IsAny<UserSession>(), out It.Ref<string>.IsAny))
+                .Returns(accessToken);
+            _jwtTokenHandlerMock.Setup(x => x.GenerateRefreshToken()).Returns(refreshToken);
+
+            //Act
+            Func<Task> action = async () => await _authController.Login(request);
+            var result = await _authController.Login(request) as BadRequestObjectResult;
+
+            //Assert
+            action.Should().ThrowAsync<InvalidOperationException>().WithMessage("Refresh token cannot be null.");
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeEquivalentTo("Refresh token cannot be null.");
+        }
+
+        [Fact]
+        public async Task Login_UserDoesntHaveRoleCantUpdateUser_ReturnsUnauthorized()
+        {
+            //Arrange
+            var request = _dataGenerator.SeedLoginDto();
+            var userId = Guid.NewGuid();
+            List<string> getUserRole = new List<string>();
+            var userSession = new UserSession(userId, request.Email, request.Email, "User");
+            string accessToken = _dataGenerator.SeedToken();
+            string refreshToken = _dataGenerator.SeedToken();
+
+            _userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>()))
+                 .ReturnsAsync(new ApplicationUser { Id = userId, UserName = request.Email, Email = request.Email });
+            _userManagerMock.Setup(x => x.CheckPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>())).ReturnsAsync(true);
+            _userManagerMock.Setup(x => x.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(getUserRole);
+            _userManagerMock.Setup(x => x.AddToRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+                .Callback(() =>
+                {
+                    getUserRole.Add("User");
+                })
+                .ReturnsAsync(() =>
+                {
+                    return IdentityResult.Success;
+                });
+            _jwtTokenHandlerMock.Setup(x => x.GenerateAccessToken(It.IsAny<UserSession>(), out It.Ref<string>.IsAny))
+                .Returns(accessToken);
+            _jwtTokenHandlerMock.Setup(x => x.GenerateRefreshToken()).Returns(refreshToken);
+            _userManagerMock.Setup(x => x.UpdateAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(IdentityResult.Failed(It.IsAny<IdentityError>()));
+
+            //Act
+            Func<Task> action = async () => await _authController.Login(request);
+            var result = await _authController.Login(request) as BadRequestObjectResult;
+
+            //Assert
+            action.Should().ThrowAsync<InvalidOperationException>().WithMessage("User update failed.");
+            result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            result.Value.Should().BeEquivalentTo("User update failed.");
+        }
 
         [Fact]
         public async Task Login_CatchesAnotherException_ReturnsInternalServerError()
         {
             //Arrange
             var request = _dataGenerator.SeedLoginDto();
-            var controller = new AuthController(_userManager, _signInManager, _environment, _emailSender, _idTokenHandler, _jwtTokenHandler, _jwtTokenRevoker);
+
             _userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>()))
                  .ThrowsAsync(new Exception());
            
-
             //Act
-            Func<Task> action = async () => await controller.Login(request);
-            var result = await controller.Login(request)! as ObjectResult;
+            Func<Task> action = async () => await _authController.Login(request);
+            var result = await _authController.Login(request)! as ObjectResult;
 
 
             //Assert
-            action.Should().NotBeNull();
             action.Should().ThrowAsync<Exception>();
-            result.Should().NotBeNull();
             result.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
             result.Value.Should().BeAssignableTo<string>();
         }

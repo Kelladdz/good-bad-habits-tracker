@@ -101,7 +101,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                 if (!checkPasswordResult) throw new InvalidCredentialException("Invalid email or password");
 
                 var getUserRole = await _userManager.GetRolesAsync(user);
-                if (getUserRole is null)
+                if (getUserRole.Count == 0)
                 {
                     var result = await _userManager.AddToRoleAsync(user, "User");
                     if (!result.Succeeded) throw new InvalidOperationException("User role cannot be added.");
@@ -109,7 +109,7 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
                 var userSession = new UserSession(user.Id, user.UserName, user.Email, getUserRole[0]);
 
                 var accessToken = _jwtTokenHandler.GenerateAccessToken(userSession, out string userFingerprint);
-                if (accessToken is null) throw new InvalidOperationException("Token cannot be null.");
+                if (accessToken is null) throw new InvalidOperationException("Access token cannot be null.");
 
                 var refreshToken = _jwtTokenHandler.GenerateRefreshToken();
                 if (refreshToken is null) throw new InvalidOperationException("Refresh token cannot be null.");
