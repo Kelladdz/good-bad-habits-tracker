@@ -140,41 +140,58 @@ namespace GoodBadHabitsTracker.API.Controllers.v1
         [HttpPost("token/refresh")]
         public async Task<IActionResult> NewRefreshToken([FromBody]NewRefreshTokenDto request)
         {
-            if (request is null) throw new HttpRequestException("Request cannot be null.");
-            
-            var principal = _jwtTokenHandler.GetPrincipalFromExpiredToken(request.AccessToken);
-            if (principal is null) throw new InvalidOperationException("Principal cannot be null.");
-
-            var userId = principal.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
-            if (userId is null) throw new InvalidOperationException("User id cannot be null.");
-
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user is null) throw new InvalidOperationException("User cannot be null.");
-                
-            if (user.RefreshToken != request.RefreshToken ||
-                user.RefreshTokenExpirationDate <= DateTime.UtcNow) throw new UnauthorizedAccessException("Refresh Token is invalid.");
-
-            var getUserRole = await _userManager.GetRolesAsync(user);
-            var userSession = new UserSession(user.Id, user.UserName, user.Email, getUserRole[0]);
-            var newAccessToken = _jwtTokenHandler.GenerateAccessToken(userSession, out string userFingerprint);
-            if (newAccessToken is null) throw new InvalidOperationException("New access token cannot be null.");
-
-            var newRefreshToken = _jwtTokenHandler.GenerateRefreshToken();
-            if (newRefreshToken is null) throw new InvalidOperationException("New refresh token cannot be null.");
-
-            user.RefreshToken = newRefreshToken;
-            user.RefreshTokenExpirationDate = DateTime.UtcNow.AddDays(7);
-            var userUpdateResult = await _userManager.UpdateAsync(user);
-            if (!userUpdateResult.Succeeded) throw new InvalidOperationException("User update failed.");
-
-            Response.Cookies.Append("__Secure-Fgp", userFingerprint, new CookieOptions
+            try
             {
-                SameSite = SameSiteMode.Strict,
-                HttpOnly = true,
-                Secure = true,
-                MaxAge = TimeSpan.FromMinutes(15),
-            });
-            return Ok(new { accessToken = newAccessToken.ToString(), refreshToken = newRefreshToken });
+                if (request is null) throw new HttpRequestException("Request cannot be null.");
+
+                var principal = _jwtTokenHandler.GetPrincipalFromExpiredToken(request.AccessToken);
+                if (principal is null) throw new InvalidOperationException("Principal cannot be null.");
+
+                var userId = principal.Claims.FirstOrDefault(claim => claim.Type == "sub")?.Value;
+                if (userId is null) throw new InvalidOperationException("User id cannot be null.");
+
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user is null) throw new InvalidOperationException("User cannot be null.");
+
+                if (user.RefreshToken != request.RefreshToken ||
+                    user.RefreshTokenExpirationDate <= DateTime.UtcNow) throw new UnauthorizedAccessException("Refresh Token is invalid.");
+
+                var getUserRole = await _userManager.GetRolesAsync(user);
+                if (getUserRole.Count == 0)
+                {
+                    var result = await _userManager.AddToRoleAsync(user, "User");
+                    if (!result.Succeeded) throw new InvalidOperationException("User role cannot be added.");
+                }
+                var userSession = new UserSession(user.Id, user.UserName, user.Email, getUserRole[0]);
+
+                var newAccessToken = _jwtTokenHandler.GenerateAccessToken(userSession, out string userFingerprint);
+                if (newAccessToken is null) throw new InvalidOperationException("New access token cannot be null.");
+
+                var newRefreshToken = _jwtTokenHandler.GenerateRefreshToken();
+                if (newRefreshToken is null) throw new InvalidOperationException("New refresh token cannot be null.");
+
+                user.RefreshToken = newRefreshToken;
+                user.RefreshTokenExpirationDate = DateTime.UtcNow.AddDays(7);
+                var userUpdateResult = await _userManager.UpdateAsync(user);
+                if (!userUpdateResult.Succeeded) throw new InvalidOperationException("User update failed.");
+
+                Response.Cookies.Append("__Secure-Fgp", userFingerprint, new CookieOptions
+                {
+                    SameSite = SameSiteMode.Strict,
+                    HttpOnly = true,
+                    Secure = true,
+                    MaxAge = TimeSpan.FromMinutes(15),
+                });
+                return Ok(new { accessToken = newAccessToken.ToString(), refreshToken = newRefreshToken });
+            }
+            catch(Exception ex)
+            {
+                if (ex is HttpRequestException) return BadRequest(ex.Message);
+                if (ex is InvalidOperationException) return BadRequest(ex.Message);
+                if (ex is UnauthorizedAccessException) return Unauthorized(ex.Message);
+                else return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+            
         }
 
         [HttpPost("logout")]

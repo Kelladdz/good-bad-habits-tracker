@@ -127,7 +127,36 @@ namespace GoodBadHabitsTracker.TestMisc
                 .RuleFor(u => u.LockoutEnabled, f => f.Random.Bool())
                 .RuleFor(u => u.AccessFailedCount, f => f.Random.Int())
                 .RuleFor(u => u.FirstName, f => f.Name.FirstName())
-                .RuleFor(u => u.LastName, f => f.Name.LastName());
+                .RuleFor(u => u.LastName, f => f.Name.LastName())
+                .RuleFor(u => u.RefreshToken, f => f.Random.String2(32))
+                .RuleFor(u => u.RefreshTokenExpirationDate, f => f.Date.Soon(7));
+
+            ApplicationUser user = userGenerator.Generate();
+            return user;
+        }
+
+        public ApplicationUser SeedUserWithExpiredRefreshToken()
+        {
+            var userGenerator = new Faker<ApplicationUser>()
+                .RuleFor(u => u.Id, f => Guid.NewGuid())
+                .RuleFor(u => u.UserName, f => f.Internet.UserName())
+                .RuleFor(u => u.Email, f => f.Internet.Email())
+                .RuleFor(u => u.NormalizedEmail, (f, u) => u.Email.ToUpper())
+                .RuleFor(u => u.NormalizedUserName, (f, u) => u.UserName.ToUpper())
+                .RuleFor(u => u.EmailConfirmed, f => f.Random.Bool())
+                .RuleFor(u => u.PasswordHash, f => f.Random.String())
+                .RuleFor(u => u.SecurityStamp, f => f.Random.String())
+                .RuleFor(u => u.ConcurrencyStamp, f => f.Random.String())
+                .RuleFor(u => u.PhoneNumber, f => f.Phone.PhoneNumber())
+                .RuleFor(u => u.PhoneNumberConfirmed, f => f.Random.Bool())
+                .RuleFor(u => u.TwoFactorEnabled, f => f.Random.Bool())
+                .RuleFor(u => u.LockoutEnd, f => f.Date.FutureOffset())
+                .RuleFor(u => u.LockoutEnabled, f => f.Random.Bool())
+                .RuleFor(u => u.AccessFailedCount, f => f.Random.Int())
+                .RuleFor(u => u.FirstName, f => f.Name.FirstName())
+                .RuleFor(u => u.LastName, f => f.Name.LastName())
+                .RuleFor(u => u.RefreshToken, f => f.Random.String2(32))
+                .RuleFor(u => u.RefreshTokenExpirationDate, f => f.Date.Recent(5));
 
             ApplicationUser user = userGenerator.Generate();
             return user;
@@ -152,7 +181,9 @@ namespace GoodBadHabitsTracker.TestMisc
                 .RuleFor(u => u.LockoutEnabled, f => f.Random.Bool())
                 .RuleFor(u => u.AccessFailedCount, f => f.Random.Int())
                 .RuleFor(u => u.FirstName, f => f.Name.FirstName())
-                .RuleFor(u => u.LastName, f => f.Name.LastName());
+                .RuleFor(u => u.LastName, f => f.Name.LastName())
+                .RuleFor(u => u.RefreshToken, f => f.Random.String2(32))
+                .RuleFor(u => u.RefreshTokenExpirationDate, f => f.Date.Soon(7));
 
             IEnumerable<ApplicationUser> users = userGenerator.Generate(number);
             return users;
@@ -309,6 +340,38 @@ namespace GoodBadHabitsTracker.TestMisc
 
             var fingerprint = (string)fingerprintGenerator;
             return fingerprint;
+        }
+
+        public ClaimsPrincipal SeedClaimsPrincipal()
+        {
+            var claimsPrincipalGenerator = new Faker<ClaimsPrincipal>()
+                .CustomInstantiator(f => new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+                {
+                    new Claim("sub", Guid.NewGuid().ToString()),
+                    new Claim("name", f.Internet.UserName()),
+                    new Claim("email", f.Internet.Email()),
+                    new Claim("jti", Guid.NewGuid().ToString()),
+                    new Claim("role", "User"),
+                    new Claim("userFingerprint", f.Random.String2(32) )
+                })));
+
+            var claimsPrincipal = (ClaimsPrincipal)claimsPrincipalGenerator;
+            return claimsPrincipal;
+        }
+        public ClaimsPrincipal SeedClaimsPrincipalWithoutSub()
+        {
+            var claimsPrincipalGenerator = new Faker<ClaimsPrincipal>()
+                .CustomInstantiator(f => new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+                {
+                    new Claim("name", f.Internet.UserName()),
+                    new Claim("email", f.Internet.Email()),
+                    new Claim("jti", Guid.NewGuid().ToString()),
+                    new Claim("role", "User"),
+                    new Claim("userFingerprint", f.Random.String2(32) )
+                })));
+
+            var claimsPrincipal = (ClaimsPrincipal)claimsPrincipalGenerator;
+            return claimsPrincipal;
         }
     }
 }
